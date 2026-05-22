@@ -1,0 +1,49 @@
+﻿@model StoreManagementSystem.Models.Customer
+
+@{
+    ViewData["Title"] = "Delete Customer";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 col-lg-6">
+
+        <div class="card shadow border-danger rounded-4 overflow-hidden">
+
+            <div class="bg-danger py-2"></div>
+
+            <div class="card-body p-4 p-md-5">
+
+                <div class="text-center mb-4">
+                    <div class="display-4 mb-3">⚠️</div>
+                    <h3 class="fw-bold text-danger">Delete Customer?</h3>
+                    <p class="text-muted">Are you sure you want to permanently remove this client from your directory? <strong>This action cannot be undone.</strong></p>
+                </div>
+
+                <div class="bg-light rounded-3 p-4 mb-5 border">
+                    <h5 class="fw-bold text-dark mb-3 text-center">@Model.FirstName @Model.LastName</h5>
+                    <dl class="row mb-0 small px-md-3">
+                        <dt class="col-sm-4 text-muted">Email:</dt>
+                        <dd class="col-sm-8 fw-semibold text-dark">@Model.Email</dd>
+
+                        <dt class="col-sm-4 text-muted mt-2">Phone:</dt>
+                        <dd class="col-sm-8 mt-2 fw-semibold text-dark">
+                            @(string.IsNullOrEmpty(Model.PhoneNumber) ? "Not Provided" : Model.PhoneNumber)
+                        </dd>
+                    </dl>
+                </div>
+
+                <form asp-action="Delete" class="text-center">
+
+                    <input type="hidden" asp-for="CustomerId" />
+
+                    <div class="d-flex justify-content-center gap-3">
+                        <input type="submit" value="Yes, Delete Customer" class="btn btn-danger btn-lg fw-bold rounded-pill shadow-sm px-4" />
+                        <a asp-action="Index" class="btn btn-light btn-lg fw-semibold rounded-pill text-muted px-4 border">Cancel</a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+</div>

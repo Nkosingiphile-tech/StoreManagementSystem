@@ -1,0 +1,25 @@
+﻿@model StoreManagementSystem.Models.Category
+
+@{
+    ViewData["Title"] = "Category Details";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body p-5">
+                <h3 class="fw-bold text-primary mb-4">Category Details</h3>
+
+                <dl class="row">
+                    <dt class="col-sm-4 text-muted">Category Name</dt>
+                    <dd class="col-sm-8 fw-bold">@Model.CategoryName</dd>
+                </dl>
+
+                <div class="mt-4">
+                    <a asp-action="Edit" asp-route-id="@Model.CategoryId" class="btn btn-primary rounded-pill px-4">Edit</a>
+                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4 ms-2">Back to List</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

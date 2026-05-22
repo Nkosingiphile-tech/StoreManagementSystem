@@ -1,0 +1,78 @@
+﻿@model StoreManagementSystem.Models.Order
+
+@{
+    ViewData["Title"] = "Order Details";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Order #@Model.OrderId</h2>
+        <div>
+            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Back to List</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+                <h5 class="fw-bold text-primary mb-3">Order Summary</h5>
+                <p class="mb-1"><strong>Customer:</strong> @Model.Customer.FirstName @Model.Customer.LastName</p>
+                <p class="mb-1"><strong>Date:</strong> @Model.OrderDate?.ToString("yyyy-MM-dd")</p>
+
+                <div class="mb-3 mt-3 p-3 bg-light rounded border">
+                    <label class="fw-bold text-muted small mb-2">Order Status:</label>
+                    <form asp-action="UpdateStatus" method="post" class="d-flex gap-2">
+                        <input type="hidden" name="orderId" value="@Model.OrderId" />
+
+                        <select asp-for="OrderStatus" class="form-select form-select-sm shadow-sm border-0">
+                            <option value="Pending">Pending</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Shipped">Shipped</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+
+                        <button type="submit" class="btn btn-sm btn-primary fw-bold px-3">Save</button>
+                    </form>
+                </div>
+                <hr />
+                <h4 class="fw-bold text-success">Total: R @Model.TotalAmount.ToString("N2")</h4>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-primary">Items Added</h5>
+                    <a asp-action="AddProduct" asp-route-id="@Model.OrderId" class="btn btn-primary btn-sm rounded-pill shadow-sm">+ Add Product</a>
+                </div>
+
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th class="text-end">Price</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.OrderDetails)
+                        {
+                            <tr>
+                                <td>@item.Product.ProductName</td>
+                                <td>@item.Quantity</td>
+                                <td class="text-end">R @item.UnitPrice.ToString("N2")</td>
+                                <td class="text-end fw-bold">R @((item.Quantity * item.UnitPrice).ToString("N2"))</td>
+                            </tr>
+                        }
+                        @if (!Model.OrderDetails.Any())
+                        {
+                            <tr><td colspan="4" class="text-center text-muted py-3">No items added yet.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,31 @@
+﻿@model StoreManagementSystem.Models.Product
+
+@{
+    ViewData["Title"] = "Delete Product";
+}
+
+<div class="container mt-4">
+    <h2 class="text-danger">Delete Product</h2>
+    <h4>Are you sure you want to delete this?</h4>
+    <hr />
+
+    <dl class="row mt-4">
+        <dt class="col-sm-3">Product Name</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.ProductName)</dd>
+
+        <dt class="col-sm-3">Price</dt>
+        <dd class="col-sm-9">R @Html.DisplayFor(model => model.Price)</dd>
+
+        <dt class="col-sm-3">Stock Quantity</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.StockQuantity)</dd>
+
+        <dt class="col-sm-3">Category</dt>
+        <dd class="col-sm-9">@Html.DisplayFor(model => model.Category.CategoryName)</dd>
+    </dl>
+
+    <form asp-action="Delete" class="mt-4">
+        <input type="hidden" asp-for="ProductId" />
+        <input type="submit" value="Confirm Delete" class="btn btn-danger" />
+        <a asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+    </form>
+</div>
