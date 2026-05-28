@@ -6,36 +6,52 @@
 
 <div class="row justify-content-center mt-5">
     <div class="col-md-8 col-lg-6">
+
         <div class="card shadow-sm border-0 rounded-4">
             <div class="card-header bg-white border-bottom-0 pt-4 pb-2 text-center">
                 <h3 class="fw-bold text-primary">Edit Order #@Model.OrderId</h3>
+                <p class="text-muted small">Modify the core details of this transaction.</p>
             </div>
-            <div class="card-body p-4 p-md-5 pt-0">
-                <form asp-action="Edit">
-                    <input type="hidden" asp-for="OrderId" />
 
-                    <div class="form-floating mb-4">
-                        <select asp-for="CustomerId" class="form-select bg-light border-0" asp-items="ViewBag.CustomerId"></select>
-                        <label class="text-muted">Customer</label>
+            <div class="card-body p-4 p-md-5 pt-0">
+                <form asp-area="Company" asp-controller="Orders" asp-action="Edit">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <input type="hidden" asp-for="OrderId" />
+                    <input type="hidden" asp-for="OrderDate" />
+                    <input type="hidden" asp-for="TotalAmount" />
+
+                    <div class="mb-4">
+                        <label asp-for="CustomerId" class="form-label text-muted small fw-bold ms-1 mb-1">Customer</label>
+                        <select asp-for="CustomerId" class="form-select form-select-lg bg-light border-0 shadow-sm" asp-items="ViewBag.CustomerId"></select>
+                        <span asp-validation-for="CustomerId" class="text-danger small fw-bold"></span>
                     </div>
 
-                    <div class="form-floating mb-4">
-                        <select asp-for="OrderStatus" class="form-select bg-light border-0">
+                    <div class="mb-5">
+                        <label asp-for="OrderStatus" class="form-label text-muted small fw-bold ms-1 mb-1">Order Status</label>
+                        <select asp-for="OrderStatus" class="form-select form-select-lg bg-light border-0 shadow-sm">
                             <option value="Pending">Pending</option>
                             <option value="Processing">Processing</option>
                             <option value="Shipped">Shipped</option>
                             <option value="Completed">Completed</option>
                             <option value="Cancelled">Cancelled</option>
                         </select>
-                        <label asp-for="OrderStatus" class="text-muted">Order Status</label>
+                        <span asp-validation-for="OrderStatus" class="text-danger small fw-bold"></span>
                     </div>
 
                     <div class="d-grid gap-2">
                         <input type="submit" value="Save Changes" class="btn btn-primary btn-lg fw-bold rounded-pill shadow-sm" />
-                        <a asp-action="Index" class="btn btn-light btn-lg rounded-pill text-muted mt-2">Cancel</a>
+                        <a asp-area="Company" asp-controller="Orders" asp-action="Index" class="btn btn-light btn-lg rounded-pill text-muted mt-2 fw-semibold">Cancel</a>
                     </div>
                 </form>
             </div>
         </div>
+
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

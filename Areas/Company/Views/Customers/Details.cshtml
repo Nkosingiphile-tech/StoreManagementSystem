@@ -46,10 +46,10 @@
                 <hr class="text-muted mt-3 mb-4" />
 
                 <div class="d-flex justify-content-center gap-3">
-                    <a asp-action="Edit" asp-route-id="@Model?.CustomerId" class="btn btn-primary fw-bold rounded-pill px-4 shadow-sm">
+                    <a asp-area="Company" asp-controller="Customers" asp-action="Edit" asp-route-id="@Model?.CustomerId" class="btn btn-primary fw-bold rounded-pill px-4 shadow-sm">
                         Edit Profile
                     </a>
-                    <a asp-action="Index" class="btn btn-outline-secondary fw-semibold rounded-pill px-4">
+                    <a asp-area="Company" asp-controller="Customers" asp-action="Index" class="btn btn-outline-secondary fw-semibold rounded-pill px-4">
                         Back to Directory
                     </a>
                 </div>

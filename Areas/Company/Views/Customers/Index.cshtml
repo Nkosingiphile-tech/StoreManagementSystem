@@ -4,78 +4,130 @@
     ViewData["Title"] = "Customer Directory";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4 mt-2">
-    <h2 class="fw-bold text-secondary">Customer Directory</h2>
-</div>
+<style>
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+        transition: background-color 0.2s ease-in-out;
+    }
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-        <strong>Success!</strong> @TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
+    .action-icons a, .action-icons button {
+        margin-right: 8px;
+        transition: transform 0.2s;
+    }
 
-<div class="card shadow-sm border-0 rounded-3">
+        .action-icons a:hover, .action-icons button:hover {
+            transform: scale(1.1);
+        }
+</style>
 
-    <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between">
-        <h5 class="mb-0 text-primary">All Customers</h5>
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark mb-0">👥 Customer Directory</h2>
         <div>
-            <a asp-action="Create" class="btn btn-primary btn-sm fw-bold shadow-sm">
+            <a asp-area="Company" asp-controller="Customers" asp-action="Create" class="btn btn-primary fw-bold shadow-sm rounded-pill px-4 me-2">
                 + Add New Customer
             </a>
-            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-sm ms-2">
+            <a asp-area="Company" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary fw-bold shadow-sm rounded-pill px-4">
                 Back to Dashboard
             </a>
         </div>
     </div>
 
-    <div class="card-body p-0 mt-3">
-        <table class="table table-hover table-borderless align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th class="ps-4">Name</th>
-                    <th>Email Address</th>
-                    <th>Phone Number</th>
-                    <th class="text-end pe-4">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-4">
+            <table id="customersTable" class="table table-hover align-middle w-100 mb-0">
+                <thead class="table-light text-muted">
                     <tr>
-                        <td class="ps-4 fw-bold text-dark">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-3 shadow-sm" style="width: 40px; height: 40px;">
-                                    @item.FirstName.Substring(0, 1)@item.LastName.Substring(0, 1)
-                                </div>
-                                @Html.DisplayFor(modelItem => item.FirstName) @Html.DisplayFor(modelItem => item.LastName)
-                            </div>
-                        </td>
-
-                        <td class="text-primary fw-semibold">
-                            <a href="mailto:@item.Email" class="text-decoration-none">@Html.DisplayFor(modelItem => item.Email)</a>
-                        </td>
-
-                        <td class="text-muted">
-                            @if (string.IsNullOrEmpty(item.PhoneNumber))
-                            {
-                                <span class="badge bg-light text-secondary border">No Phone</span>
-                            }
-                            else
-                            {
-                                @Html.DisplayFor(modelItem => item.PhoneNumber)
-                            }
-                        </td>
-
-                        <td class="text-end pe-4">
-                            <a asp-action="Edit" asp-route-id="@item.CustomerId" class="btn btn-sm btn-outline-primary me-1">Edit</a>
-                            <a asp-action="Details" asp-route-id="@item.CustomerId" class="btn btn-sm btn-outline-info me-1">Details</a>
-                            <a asp-action="Delete" asp-route-id="@item.CustomerId" class="btn btn-sm btn-outline-danger">Delete</a>
-                        </td>
+                        <th class="fw-semibold ps-4">Name</th>
+                        <th class="fw-semibold">Email Address</th>
+                        <th class="fw-semibold">Phone Number</th>
+                        <th class="fw-semibold text-end pe-4">Actions</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-bold text-dark">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-3 shadow-sm" style="width: 40px; height: 40px;">
+                                        @(item.FirstName.Length > 0 ? item.FirstName.Substring(0, 1) : "")@(item.LastName.Length > 0 ? item.LastName.Substring(0, 1) : "")
+                                    </div>
+                                    @item.FirstName @item.LastName
+                                </div>
+                            </td>
+                            <td class="text-primary fw-semibold">
+                                <a href="mailto:@item.Email" class="text-decoration-none">@item.Email</a>
+                            </td>
+                            <td class="text-muted">
+                                @if (string.IsNullOrEmpty(item.PhoneNumber))
+                                {
+                                    <span class="badge bg-light text-secondary border">No Phone</span>
+                                }
+                                else
+                                {
+                                    @item.PhoneNumber
+                                }
+                            </td>
+                            <td class="text-end pe-4 action-icons">
+                                <a asp-area="Company" asp-controller="Customers" asp-action="Edit" asp-route-id="@item.CustomerId" class="btn btn-sm btn-outline-primary rounded-circle" title="Edit">✏️</a>
+                                <a asp-area="Company" asp-controller="Customers" asp-action="Details" asp-route-id="@item.CustomerId" class="btn btn-sm btn-outline-info rounded-circle" title="Details">📄</a>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" onclick="confirmDelete(@item.CustomerId, '@item.FirstName @item.LastName')" title="Delete">🗑️</button>
+
+                                <form id="delete-form-@item.CustomerId" asp-area="Company" asp-controller="Customers" asp-action="Delete" asp-route-id="@item.CustomerId" method="post" class="d-none">
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#customersTable').DataTable({
+                "pageLength": 10,
+                "language": {
+                    "search": "Search Customers:"
+                }
+            });
+
+            var successMessage = '@TempData["SuccessMessage"]';
+            if (successMessage) {
+                toastr.success(successMessage, 'Success', {
+                    "positionClass": "toast-bottom-right",
+                    "timeOut": "3000"
+                });
+            }
+        });
+
+        function confirmDelete(customerId, customerName) {
+            Swal.fire({
+                title: 'Delete Customer?',
+                text: "You are about to remove " + customerName + " from the directory. This cannot be undone!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, remove them!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('delete-form-' + customerId).submit();
+                }
+            })
+        }
+    </script>
+}

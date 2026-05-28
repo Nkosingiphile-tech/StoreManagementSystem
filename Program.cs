@@ -13,6 +13,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddEntityFrameworkStores<StoreManagementDbContext>();
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR(); // For real-time notifications
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
@@ -90,4 +91,5 @@ app.MapControllerRoute(
 
 app.MapRazorPages(); // Needed for Identity UI routing
 
+app.MapHub<StoreManagementSystem.Hubs.NotificationHub>("/notificationHub");
 app.Run();

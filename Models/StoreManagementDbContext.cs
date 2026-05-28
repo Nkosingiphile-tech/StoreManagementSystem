@@ -27,7 +27,7 @@ public partial class StoreManagementDbContext : IdentityDbContext<IdentityUser>
 
     public virtual DbSet<Product> Products { get; set; }
 
-   
+    public DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

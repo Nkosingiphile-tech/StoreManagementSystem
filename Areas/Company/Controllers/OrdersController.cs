@@ -7,20 +7,28 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using StoreManagementSystem.Models;
+using Microsoft.AspNetCore.SignalR;
+using StoreManagementSystem.Hubs;
+
 namespace StoreManagementSystem.Areas.Company.Controllers
 {
+    
     // The Controller handles all user requests related to Orders and coordinates the Views.
     [Area("Company")] // This attribute indicates that this controller belongs to the "Company" area of the application
     [Authorize(Roles = "Admin")] // This attribute restricts access to authenticated users, ensuring that only logged-in users can manage orders
+
+    
     public class OrdersController : Controller
     {
         // Private field for the Entity Framework database context
         private readonly StoreManagementDbContext _context;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
         // Constructor: Dependency Injection provides the database context
-        public OrdersController(StoreManagementDbContext context)
+        public OrdersController(StoreManagementDbContext context, IHubContext<NotificationHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         // --- READ: Get all orders ---
@@ -102,22 +110,39 @@ namespace StoreManagementSystem.Areas.Company.Controllers
         // : Update Order Status ---
         [HttpPost]
         [ValidateAntiForgeryToken]
+
         public async Task<IActionResult> UpdateStatus(int orderId, string orderStatus)
         {
-            var order = await _context.Orders.FindAsync(orderId);
+            // Include the Customer so we know who to notify
+            var order = await _context.Orders.Include(o => o.Customer).FirstOrDefaultAsync(o => o.OrderId == orderId);
+
             if (order == null)
             {
                 return NotFound();
             }
 
-            // Update only the status
+            // 1. Update the Order
             order.OrderStatus = orderStatus;
+
+            // 2. Create the Notification for the Database
+            string alertMessage = $"Good news! Your order #{orderId} is now {orderStatus}.";
+            var notification = new Notification
+            {
+                UserId = order.Customer.Email, // Linking it via email
+                Message = alertMessage,
+                ActionUrl = $"/Orders/Details/{orderId}" // Link to the order
+            };
+
+            _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
 
-            // Trigger the green success banner we built earlier
-            TempData["SuccessMessage"] = $"Order #{orderId} marked as {orderStatus}.";
+           // Fire the real-time SignalR WebSocket!
+            // (For portfolio testing, we are broadcasting this to all connected clients so you can easily see it pop up in multiple browser tabs)
+            await _hubContext.Clients.All.SendAsync("ReceiveStatusUpdate", alertMessage);
 
-            // Reload the Details page
+            // Trigger the Admin's green success banner
+            TempData["SuccessMessage"] = $"Order #{orderId} marked as {orderStatus}. Customer notified!";
+
             return RedirectToAction(nameof(Details), new { id = orderId });
         }
         // --- UPDATE: Show the form ---
