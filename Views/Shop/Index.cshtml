@@ -1,0 +1,29 @@
+﻿@model IEnumerable<StoreManagementSystem.Models.Product>
+
+@{
+    ViewData["Title"] = "Store Catalog";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Available Products</h2>
+
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">@item.ProductName</h5>
+                        <p class="card-text text-muted">@item.StockQuantity</p>
+                        <h6 class="text-success fw-bold">R @item.Price</h6>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0">
+                        <a asp-controller="Shop" asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-outline-primary w-100">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

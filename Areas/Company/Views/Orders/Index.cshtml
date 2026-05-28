@@ -1,0 +1,64 @@
+﻿@model IEnumerable<StoreManagementSystem.Models.Order>
+
+@{
+    ViewData["Title"] = "Sales Orders";
+}
+
+<div class="card shadow-sm border-0 rounded-4 p-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary mb-0">Sales Orders</h3>
+        <a asp-action="Create" class="btn btn-primary rounded-pill shadow-sm fw-bold px-4">+ Create New Order</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Order #</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="fw-bold text-dark ps-4">#@item.OrderId</td>
+                        <td>@item.Customer.FirstName @item.Customer.LastName</td>
+                        <td class="text-muted">@item.OrderDate?.ToString("yyyy-MM-dd")</td>
+                        <td>
+                            @if (item.OrderStatus == "Completed")
+                            {
+                                <span class="badge bg-success rounded-pill px-3">Completed</span>
+                            }
+                            else if (item.OrderStatus == "Cancelled")
+                            {
+                                <span class="badge bg-danger rounded-pill px-3">Cancelled</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark rounded-pill px-3">@item.OrderStatus</span>
+                            }
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group shadow-sm rounded-pill" role="group">
+                                <a asp-action="Details" asp-route-id="@item.OrderId" class="btn btn-sm btn-primary px-3 fw-bold">Manage</a>
+                                <a asp-action="Edit" asp-route-id="@item.OrderId" class="btn btn-sm btn-outline-secondary px-3">Edit</a>
+                                <a asp-action="Delete" asp-route-id="@item.OrderId" class="btn btn-sm btn-outline-danger px-3">Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">No orders found. Click "Create New Order" to get started!</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
