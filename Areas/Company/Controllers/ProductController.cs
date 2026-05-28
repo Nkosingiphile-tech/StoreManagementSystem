@@ -11,7 +11,7 @@ using StoreManagementSystem.Models;
 namespace StoreManagementSystem.Areas.Company.Controllers
 {
     [Area("Company")]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class ProductsController : Controller
     {
         private readonly StoreManagementDbContext _context;

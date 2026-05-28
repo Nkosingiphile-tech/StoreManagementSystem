@@ -11,7 +11,7 @@ namespace StoreManagementSystem.Areas.Company.Controllers
 {
     // The Controller handles all user requests related to Customers and coordinates between the Views and the Models.
     [Area("Company")] // This attribute indicates that this controller is part of the "Company" area in the application
-    [Authorize]// This attribute restricts access to authenticated users, ensuring that only logged-in users can manage customers
+    [Authorize(Roles = "Admin")]// This attribute restricts access to authenticated users, ensuring that only logged-in users can manage customers
     public class CustomersController : Controller
     {
         // Private field to hold our database context for EF Core

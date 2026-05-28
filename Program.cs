@@ -1,8 +1,5 @@
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Web;
-using Microsoft.Identity.Web.UI;
 using StoreManagementSystem.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,44 +7,67 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<StoreManagementDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// --- ADD ASP.NET CORE IDENTITY ---
+// --- 1. ADD LOCAL IDENTITY WITH ROLE SUPPORT ---
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
+    .AddRoles<IdentityRole>() // THIS LINE IS CRUCIAL FOR RBAC!
     .AddEntityFrameworkStores<StoreManagementDbContext>();
 
-// --- ADD ENTRA ID AUTHENTICATION ---
-builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-    .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
-// Add services to the container.
-builder.Services.AddControllersWithViews()
-    .AddMicrosoftIdentityUI(); // This adds the UI for login/logout and other auth-related pages
-
+builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
 var app = builder.Build();
 
-// Auto-Generate the database if it doesn't exist (No Migrations)
+// --- 2. DATA SEEDER: AUTO-GENERATE DB, ROLES, AND ADMIN ACCOUNT ---
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var context = services.GetRequiredService<StoreManagementDbContext>();
-
-        //This will bypass the migrations and directly create the database based on the current model if DB doesn't exist.
+        // This will create the DB and all Identity tables (AspNetUsers, AspNetRoles, etc.)
         context.Database.EnsureCreated();
+
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
+
+        // Create Roles if they don't exist
+        string[] roleNames = { "Admin", "Customer" };
+        foreach (var roleName in roleNames)
+        {
+            var roleExist = roleManager.RoleExistsAsync(roleName).Result;
+            if (!roleExist)
+            {
+                roleManager.CreateAsync(new IdentityRole(roleName)).Wait();
+            }
+        }
+
+        // Create a default Admin user if none exists
+        var adminEmail = "admin@store.com";
+        var adminUser = userManager.FindByEmailAsync(adminEmail).Result;
+
+        if (adminUser == null)
+        {
+            adminUser = new IdentityUser { UserName = adminEmail, Email = adminEmail };
+            // Note: Passwords must have an uppercase, lowercase, number, and special character by default
+            var createPowerUser = userManager.CreateAsync(adminUser, "Admin@123!").Result;
+
+            if (createPowerUser.Succeeded)
+            {
+                // Assign this new user to the Admin role
+                userManager.AddToRoleAsync(adminUser, "Admin").Wait();
+            }
+        }
     }
     catch (Exception ex)
     {
-        //if something goes wrong during DB creation, it log the error )
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while creating the database.");
+        logger.LogError(ex, "An error occurred while seeding the database.");
     }
 }
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -56,19 +76,18 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication(); // This enables authentication middleware to process incoming requests and set the user context
+// Authentication MUST be before Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
-// --- NEW ROUTING FOR AREAS ---
 app.MapControllerRoute(
     name: "MyArea",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
-// --- DEFAULT ROUTING ---
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapRazorPages();
+app.MapRazorPages(); // Needed for Identity UI routing
 
 app.Run();

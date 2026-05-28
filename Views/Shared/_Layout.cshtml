@@ -30,9 +30,7 @@
                     </ul>
 
                     <ul class="navbar-nav">
-                        <li class="nav-item me-3">
-                            <a class="nav-link text-white btn btn-outline-secondary btn-sm px-3 rounded-pill" asp-area="Identity" asp-page="/Account/Login">Customer Login</a>
-                        </li>
+                        <partial name="_LoginPartial" />
                         <li class="nav-item border-start ps-3">
                             <a class="nav-link text-danger fw-bold" asp-area="Company" asp-controller="Home" asp-action="Index">Staff Admin Panel</a>
                         </li>

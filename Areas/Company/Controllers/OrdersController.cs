@@ -11,7 +11,7 @@ namespace StoreManagementSystem.Areas.Company.Controllers
 {
     // The Controller handles all user requests related to Orders and coordinates the Views.
     [Area("Company")] // This attribute indicates that this controller belongs to the "Company" area of the application
-    [Authorize] // This attribute restricts access to authenticated users, ensuring that only logged-in users can manage orders
+    [Authorize(Roles = "Admin")] // This attribute restricts access to authenticated users, ensuring that only logged-in users can manage orders
     public class OrdersController : Controller
     {
         // Private field for the Entity Framework database context

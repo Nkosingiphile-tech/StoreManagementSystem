@@ -11,7 +11,7 @@ namespace StoreManagementSystem.Areas.Company.Controllers
 {
     // The Controller handles all user requests related to Categories and manages data flow to the Views.
     [Area("Company")] // This attribute specifies that this controller belongs to the "Company" area of the application
-    [Authorize] // This attribute restricts access to authenticated users only, ensuring that only logged-in users can manage categories
+    [Authorize(Roles = "Admin")] // This attribute restricts access to authenticated users only
     public class CategoriesController : Controller
     {
         // Private field for the Entity Framework database context
