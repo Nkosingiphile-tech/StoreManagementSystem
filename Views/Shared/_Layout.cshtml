@@ -21,19 +21,39 @@
 
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white" asp-area="" asp-controller="Shop" asp-action="Index">Shop Catalog</a>
-                        </li>
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-white fw-bold" asp-area="Company" asp-controller="Home" asp-action="Index">Dashboard</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-area="Company" asp-controller="Products" asp-action="Index">Products</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-area="Company" asp-controller="Categories" asp-action="Index">Categories</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-area="Company" asp-controller="Customers" asp-action="Index">Customers</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-area="Company" asp-controller="Orders" asp-action="Index">Orders</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-area="" asp-controller="Shop" asp-action="Index">Shop Catalog</a>
+                            </li>
+                        }
+
                     </ul>
 
                     <ul class="navbar-nav">
                         <partial name="_LoginPartial" />
-                        <li class="nav-item border-start ps-3">
-                            <a class="nav-link text-danger fw-bold" asp-area="Company" asp-controller="Home" asp-action="Index">Staff Admin Panel</a>
-                        </li>
                     </ul>
                 </div>
             </div>

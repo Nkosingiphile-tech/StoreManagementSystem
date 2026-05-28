@@ -15,6 +15,11 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
+        // If the user logging in has the Admin role, route them instantly to the dashboard
+        if (User.IsInRole("Admin"))
+        {
+            return RedirectToAction("Index", "Home", new { area = "Company" });
+        }
         return View();
     }
 

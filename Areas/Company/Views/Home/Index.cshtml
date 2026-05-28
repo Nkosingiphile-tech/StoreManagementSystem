@@ -1,6 +1,7 @@
 ﻿@{
     ViewData["Title"] = "Dashboard";
 }
+@model StoreManagementSystem.ViewModels.DashboardViewModel
 
 <div class="p-5 mb-5 bg-dark text-white rounded-4 shadow-lg position-relative overflow-hidden">
     <div class="container-fluid py-4 position-relative" style="z-index: 2;">
@@ -9,8 +10,8 @@
             Welcome to your central hub. Manage your inventory, track recent orders, and keep your customers happy—all from one clean, responsive dashboard.
         </p>
         <div>
-            <a asp-controller="Products" asp-action="Index" class="btn btn-primary btn-lg fw-bold me-3 shadow-sm px-4 rounded-pill">View Inventory</a>
-            <a asp-controller="Orders" asp-action="Index" class="btn btn-outline-light btn-lg fw-bold shadow-sm px-4 rounded-pill">Recent Orders</a>
+            <a asp-area="Company" asp-controller="Products" asp-action="Index" class="btn btn-primary btn-lg fw-bold me-3 shadow-sm px-4 rounded-pill">View Inventory</a>
+            <a asp-area="Company" asp-controller="Orders" asp-action="Index" class="btn btn-outline-light btn-lg fw-bold shadow-sm px-4 rounded-pill">Recent Orders</a>
         </div>
     </div>
 </div>
@@ -19,19 +20,19 @@
     <div class="col-md-4">
         <div class="card p-4 border-0 shadow-sm text-center h-100">
             <h6 class="text-muted">Total Revenue (Month)</h6>
-            <h2 class="fw-bold text-primary">R 45,200</h2>
+            <h2 class="fw-bold text-primary">R @Model.TotalRevenue.ToString("0.00")</h2>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card p-4 border-0 shadow-sm text-center h-100">
             <h6 class="text-muted">Active Customers</h6>
-            <h2 class="fw-bold text-success">128</h2>
+            <h2 class="fw-bold text-success">@Model.ActiveCustomers</h2>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card p-4 border-0 shadow-sm text-center h-100">
             <h6 class="text-muted">Pending Orders</h6>
-            <h2 class="fw-bold text-warning">12</h2>
+            <h2 class="fw-bold text-warning">@Model.PendingOrders</h2>
         </div>
     </div>
 </div>
@@ -43,7 +44,7 @@
                 <div class="display-4 mb-3">📦</div>
                 <h5 class="fw-bold text-dark mb-2">Products</h5>
                 <p class="text-muted small mb-4">Add, edit, or remove items from your central catalog.</p>
-                <a asp-controller="Products" asp-action="Index" class="btn btn-sm btn-outline-primary w-100 rounded-pill fw-semibold">Manage</a>
+                <a asp-area="Company" asp-controller="Products" asp-action="Index" class="btn btn-sm btn-outline-primary w-100 rounded-pill fw-semibold">Manage</a>
             </div>
         </div>
     </div>
@@ -54,7 +55,7 @@
                 <div class="display-4 mb-3">🗂️</div>
                 <h5 class="fw-bold text-dark mb-2">Categories</h5>
                 <p class="text-muted small mb-4">Organize your inventory for quick and easy navigation.</p>
-                <a asp-controller="Categories" asp-action="Index" class="btn btn-sm btn-outline-secondary w-100 rounded-pill fw-semibold">Organize</a>
+                <a asp-area="Company" asp-controller="Categories" asp-action="Index" class="btn btn-sm btn-outline-secondary w-100 rounded-pill fw-semibold">Organize</a>
             </div>
         </div>
     </div>
@@ -65,7 +66,7 @@
                 <div class="display-4 mb-3">👥</div>
                 <h5 class="fw-bold text-dark mb-2">Customers</h5>
                 <p class="text-muted small mb-4">View client details and manage your contact directory.</p>
-                <a asp-controller="Customers" asp-action="Index" class="btn btn-sm btn-outline-success w-100 rounded-pill fw-semibold">Directory</a>
+                <a asp-area="Company" asp-controller="Customers" asp-action="Index" class="btn btn-sm btn-outline-success w-100 rounded-pill fw-semibold">Directory</a>
             </div>
         </div>
     </div>
@@ -76,7 +77,7 @@
                 <div class="display-4 mb-3">🛒</div>
                 <h5 class="fw-bold text-dark mb-2">Orders</h5>
                 <p class="text-muted small mb-4">Track current sales and monitor your order fulfillment.</p>
-                <a asp-controller="Orders" asp-action="Index" class="btn btn-sm btn-outline-warning w-100 rounded-pill fw-semibold">Track Sales</a>
+                <a asp-area="Company" asp-controller="Orders" asp-action="Index" class="btn btn-sm btn-outline-warning w-100 rounded-pill fw-semibold">Track Sales</a>
             </div>
         </div>
     </div>
