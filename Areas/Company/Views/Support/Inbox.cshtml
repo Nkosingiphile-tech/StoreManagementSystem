@@ -1,0 +1,126 @@
+@model List<string>
+@{
+    ViewData["Title"] = "Support Inbox";
+}
+
+<style>
+    /* Hide the floating widget on this specific page so the Admin uses the Inbox */
+    #chat-widget-container, #chat-toggle-btn { display: none !important; }
+    .inbox-container { height: 75vh; border-radius: 10px; overflow: hidden; }
+    .customer-list { background-color: #f8f9fa; border-right: 1px solid #dee2e6; overflow-y: auto; height: 100%; }
+    .chat-pane { background-color: #ffffff; display: flex; flex-direction: column; height: 100%; }
+    .chat-history { flex-grow: 1; overflow-y: auto; padding: 20px; background-color: #f1f4f6; }
+    .customer-item { cursor: pointer; transition: 0.2s; }
+    .customer-item:hover, .customer-item.active { background-color: #0d6efd; color: white; }
+    .chat-bubble { max-width: 75%; padding: 10px 15px; border-radius: 20px; margin-bottom: 15px; clear: both; word-wrap: break-word; }
+    .chat-sent { background-color: #0d6efd; color: white; float: right; border-bottom-right-radius: 4px; }
+    .chat-received { background-color: #ffffff; color: #212529; float: left; border-bottom-left-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+</style>
+
+<div class="container-fluid mt-4 shadow-lg inbox-container d-flex p-0 border">
+    
+    <div class="col-md-3 customer-list p-0">
+        <div class="p-3 bg-dark text-white fw-bold fs-5">Active Conversations</div>
+        <ul class="list-group list-group-flush" id="customer-list-ul">
+            @foreach (var email in Model)
+            {
+                <li class="list-group-item customer-item p-3 fw-semibold" onclick="loadChat('@email', this)">
+                    👤 @email
+                </li>
+            }
+            @if(!Model.Any())
+            {
+                <li class="list-group-item text-muted p-3">No messages yet.</li>
+            }
+        </ul>
+    </div>
+
+    <div class="col-md-9 chat-pane p-0">
+        <div class="p-3 bg-white border-bottom shadow-sm">
+            <h5 class="m-0 fw-bold text-primary" id="active-customer-header">Select a customer to start chatting</h5>
+        </div>
+
+        <div class="chat-history" id="inbox-messages">
+            </div>
+
+        <div class="p-3 bg-white border-top">
+            <div class="input-group">
+                <input type="text" id="adminMessageInput" class="form-control" placeholder="Type your reply..." disabled onkeypress="handleAdminEnter(event)">
+                <button class="btn btn-primary fw-bold px-4" id="adminSendBtn" disabled onclick="sendAdminMessage()">Send Reply</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentActiveCustomer = "";
+
+        // 1. Load Chat History from Database
+        function loadChat(email, element) {
+            currentActiveCustomer = email;
+            
+            // UI Updates
+            document.querySelectorAll('.customer-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById('active-customer-header').innerText = `Chatting with: ${email}`;
+            document.getElementById('adminMessageInput').disabled = false;
+            document.getElementById('adminSendBtn').disabled = false;
+
+            // Fetch history
+            fetch(`/Company/Support/GetChatHistory?email=${email}`)
+                .then(response => response.json())
+                .then(data => {
+                    const chatBox = document.getElementById('inbox-messages');
+                    chatBox.innerHTML = ''; 
+                    data.forEach(msg => {
+                        appendMessageToInbox(msg.message, msg.isFromAdmin);
+                    });
+                });
+        }
+
+        // 2. Append visually to the screen
+        function appendMessageToInbox(message, isFromAdmin) {
+            const chatBox = document.getElementById('inbox-messages');
+            const bubbleClass = isFromAdmin ? 'chat-sent' : 'chat-received';
+            
+            const html = `
+                <div class="chat-bubble ${bubbleClass}">${message}</div>
+                <div style="clear: both;"></div>
+            `;
+            chatBox.insertAdjacentHTML('beforeend', html);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // 3. Send Live Message
+        function sendAdminMessage() {
+            const input = document.getElementById('adminMessageInput');
+            const message = input.value.trim();
+
+            if (message && currentActiveCustomer) {
+                input.value = ''; // Prevent double-clicks
+                
+                appendMessageToInbox(message, true); // Optimistic UI instant draw
+                
+                connection.invoke("SendMessage", "admin@store.com", currentActiveCustomer, message)
+                    .catch(err => console.error(err.toString()));
+            }
+        }
+
+        function handleAdminEnter(e) {
+            if (e.key === 'Enter') sendAdminMessage();
+        }
+
+        // 4. INSTANT LIVE RECEIVE
+        connection.on("ReceiveMessage", function (sender, receiver, message) {
+            // Ignore the Admin's own echo
+            if (sender === "admin@store.com") return; 
+
+            // If the incoming message is from the customer we are currently looking at, draw it instantly!
+            if (sender === currentActiveCustomer) {
+                appendMessageToInbox(message, false);
+            }
+        });
+    </script>
+}
+}

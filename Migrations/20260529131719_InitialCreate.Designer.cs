@@ -12,8 +12,8 @@ using StoreManagementSystem.Models;
 namespace StoreManagementSystem.Migrations
 {
     [DbContext(typeof(StoreManagementDbContext))]
-    [Migration("20260528160428_AddNotifications")]
-    partial class AddNotifications
+    [Migration("20260529131719_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
