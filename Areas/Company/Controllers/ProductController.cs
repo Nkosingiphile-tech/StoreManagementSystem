@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.IO; // Required for file saving
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting; // Required to access wwwroot
+using Microsoft.AspNetCore.Http; // Required for IFormFile
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -15,10 +18,13 @@ namespace StoreManagementSystem.Areas.Company.Controllers
     public class ProductsController : Controller
     {
         private readonly StoreManagementDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment; // Added to handle file paths
 
-        public ProductsController(StoreManagementDbContext context)
+        // Inject BOTH the database and the web hosting environment
+        public ProductsController(StoreManagementDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // --- READ: Get all products ---
@@ -51,7 +57,6 @@ namespace StoreManagementSystem.Areas.Company.Controllers
         // --- CREATE: Show the form ---
         public IActionResult Create()
         {
-            // Dropdown uses CategoryId
             ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName");
             return View();
         }
@@ -59,22 +64,46 @@ namespace StoreManagementSystem.Areas.Company.Controllers
         // --- CREATE: Save the form data ---
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ProductId,ProductName,Price,StockQuantity,CategoryId")] Product product)
+        // ADDED: Include Description and the incoming file
+        public async Task<IActionResult> Create([Bind("ProductId,ProductName,Description,Price,StockQuantity,CategoryId")] Product product, IFormFile? file)
         {
-            // Ignore the missing Category object during validation
             ModelState.Remove("Category");
 
             if (ModelState.IsValid)
             {
+                // IMAGE UPLOAD LOGIC
+                if (file != null && file.Length > 0)
+                {
+                    // 1. Point to the wwwroot/images/products folder
+                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
+                    
+                    // 2. If the folder doesn't exist yet, create it!
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+
+                    // 3. Create a unique filename using a GUID so files never overwrite each other
+                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    // 4. Save the physical file to the hard drive
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(fileStream);
+                    }
+
+                    // 5. Save the text path to the database
+                    product.ImageUrl = "/images/products/" + uniqueFileName;
+                }
+
                 _context.Add(product);
                 await _context.SaveChangesAsync();
 
-                // Store a success message
                 TempData["SuccessMessage"] = "Product created successfully!";
                 return RedirectToAction(nameof(Index));
             }
 
-            // Dropdown uses CategoryId
             ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName", product.CategoryId);
             return View(product);
         }
@@ -93,7 +122,6 @@ namespace StoreManagementSystem.Areas.Company.Controllers
                 return NotFound();
             }
 
-            // Dropdown uses CategoryId
             ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName", product.CategoryId);
             return View(product);
         }
@@ -101,24 +129,43 @@ namespace StoreManagementSystem.Areas.Company.Controllers
         // --- UPDATE: Save the form data ---
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ProductId,ProductName,Price,StockQuantity,CategoryId")] Product product)
+        // ADDED: Include Description, ImageUrl (to preserve old image), and the incoming file
+        public async Task<IActionResult> Edit(int id, [Bind("ProductId,ProductName,Description,Price,StockQuantity,CategoryId,ImageUrl")] Product product, IFormFile? file)
         {
             if (id != product.ProductId)
             {
                 return NotFound();
             }
 
-            // Ignore the missing Category object during validation
             ModelState.Remove("Category");
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    // IMAGE UPLOAD LOGIC (Override old image)
+                    if (file != null && file.Length > 0)
+                    {
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+
+                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
+                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(fileStream);
+                        }
+
+                        product.ImageUrl = "/images/products/" + uniqueFileName;
+                    }
+
                     _context.Update(product);
                     await _context.SaveChangesAsync();
 
-                    // Store a success message
                     TempData["SuccessMessage"] = "Product updated successfully!";
                 }
                 catch (DbUpdateConcurrencyException)
@@ -135,7 +182,6 @@ namespace StoreManagementSystem.Areas.Company.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Dropdown uses CategoryId
             ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName", product.CategoryId);
             return View(product);
         }
@@ -173,7 +219,6 @@ namespace StoreManagementSystem.Areas.Company.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Optional: Success message for deletion
             TempData["SuccessMessage"] = "Product deleted successfully!";
             return RedirectToAction(nameof(Index));
         }

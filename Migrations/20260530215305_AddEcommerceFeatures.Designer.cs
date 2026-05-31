@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StoreManagementSystem.Models;
 
@@ -11,9 +12,11 @@ using StoreManagementSystem.Models;
 namespace StoreManagementSystem.Migrations
 {
     [DbContext(typeof(StoreManagementDbContext))]
-    partial class StoreManagementDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260530215305_AddEcommerceFeatures")]
+    partial class AddEcommerceFeatures
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -411,9 +414,6 @@ namespace StoreManagementSystem.Migrations
                         .HasColumnType("varchar(50)")
                         .HasDefaultValue("Pending");
 
-                    b.Property<string>("StripeSessionId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18, 2)");
 
@@ -470,12 +470,6 @@ namespace StoreManagementSystem.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("int")
                         .HasColumnName("CategoryID");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ImageUrl")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18, 2)");

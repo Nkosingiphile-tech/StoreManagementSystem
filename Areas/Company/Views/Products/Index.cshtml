@@ -15,9 +15,9 @@
         transition: transform 0.2s;
     }
 
-        .action-icons a:hover, .action-icons button:hover {
-            transform: scale(1.1);
-        }
+    .action-icons a:hover, .action-icons button:hover {
+        transform: scale(1.1);
+    }
 </style>
 
 <div class="container-fluid py-4">
@@ -33,6 +33,7 @@
             <table id="productsTable" class="table table-hover align-middle w-100">
                 <thead class="table-light text-muted">
                     <tr>
+                        <th class="fw-semibold text-center" style="width: 80px;">Image</th>
                         <th class="fw-semibold">Product Name</th>
                         <th class="fw-semibold">Category</th>
                         <th class="fw-semibold">Price</th>
@@ -44,6 +45,19 @@
                     @foreach (var item in Model)
                     {
                         <tr>
+                            <td class="text-center">
+                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl" style="width: 50px; height: 50px; object-fit: cover;" class="rounded shadow-sm" alt="Product Image" />
+                                }
+                                else
+                                {
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center shadow-sm mx-auto" style="width: 50px; height: 50px;">
+                                        <i class="bi bi-image text-muted"></i>
+                                    </div>
+                                }
+                            </td>
+                            
                             <td class="fw-bold text-dark">@item.ProductName</td>
                             <td><span class="badge bg-secondary bg-opacity-25 text-dark">@item.Category?.CategoryName</span></td>
                             <td class="text-success fw-bold">R @item.Price.ToString("0.00")</td>
@@ -60,7 +74,6 @@
                             <td class="text-end action-icons">
                                 <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-primary rounded-circle" title="Edit">✏️</a>
                                 <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-info rounded-circle" title="Details">📄</a>
-
                                 <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" onclick="confirmDelete(@item.ProductId, '@item.ProductName')" title="Delete">🗑️</button>
 
                                 <form id="delete-form-@item.ProductId" asp-action="Delete" asp-route-id="@item.ProductId" method="post" class="d-none">

@@ -14,15 +14,32 @@
             </div>
 
             <div class="card-body p-4 p-md-5 pt-0">
-                <form asp-action="Edit">
+                <form asp-action="Edit" enctype="multipart/form-data">
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                     <input type="hidden" asp-for="ProductId" />
+                    <input type="hidden" asp-for="ImageUrl" /> @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <div class="text-center mb-4">
+                            <img src="@Model.ImageUrl" class="img-thumbnail shadow-sm rounded-3" style="max-height: 150px;" alt="Product Image" />
+                        </div>
+                    }
 
                     <div class="form-floating mb-4">
                         <input asp-for="ProductName" class="form-control bg-light border-0" placeholder="Product Name" />
                         <label asp-for="ProductName" class="text-muted">Product Name</label>
                         <span asp-validation-for="ProductName" class="text-danger small fw-bold"></span>
+                    </div>
+
+                    <div class="form-floating mb-4">
+                        <textarea asp-for="Description" class="form-control bg-light border-0" placeholder="Product features..." style="height: 100px"></textarea>
+                        <label asp-for="Description" class="text-muted">Description</label>
+                        <span asp-validation-for="Description" class="text-danger small fw-bold"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-muted small fw-bold ms-1 mb-1">Update Product Image (Optional)</label>
+                        <input type="file" name="file" class="form-control form-control-lg bg-light border-0 shadow-sm" accept="image/*" />
                     </div>
 
                     <div class="row mb-4">
@@ -60,7 +77,5 @@
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }

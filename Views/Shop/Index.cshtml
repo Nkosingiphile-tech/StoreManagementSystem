@@ -4,26 +4,170 @@
     ViewData["Title"] = "Store Catalog";
 }
 
-<div class="container mt-4">
-    <h2 class="mb-4">Available Products</h2>
+<style>
+    .product-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid #e0e0e0;
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .product-image-container {
+        height: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #ffffff;
+        padding: 1rem;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    .product-image-container img {
+        max-height: 100%;
+        max-width: 100%;
+        object-fit: contain;
+    }
+    .price-tag {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #b12704; /* Amazon Red */
+    }
+    .stock-badge {
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+</style>
 
-    <div class="row">
-        @foreach (var item in Model)
+<div class="container-fluid my-4 px-lg-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <h2 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-shop text-primary me-2"></i>Full Catalog
+        </h2>
+        <span class="text-muted fw-semibold bg-light px-3 py-1 rounded-pill border">
+            Showing @Model.Count() products
+        </span>
+    </div>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+        @if (Model != null && Model.Any())
         {
-            <div class="col-md-4 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">@item.ProductName</h5>
-                        <p class="card-text text-muted">@item.StockQuantity</p>
-                        <h6 class="text-success fw-bold">R @item.Price</h6>
-                    </div>
-                    <div class="card-footer bg-transparent border-top-0">
-                        <a asp-controller="Shop" asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-outline-primary w-100">
-                            View Details
+            foreach (var item in Model)
+            {
+                <div class="col">
+                    <div class="card h-100 product-card rounded-4 overflow-hidden border-0 shadow-sm">
+
+                        <a asp-controller="Shop" asp-action="Details" asp-route-id="@item.ProductId" class="text-decoration-none">
+                            <div class="product-image-container">
+                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl" alt="@item.ProductName" class="transition-zoom">
+                                }
+                                else
+                                {
+                                    <i class="bi bi-image text-muted opacity-25" style="font-size: 4rem;"></i>
+                                }
+                            </div>
                         </a>
+
+                        <div class="card-body d-flex flex-column p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary text-uppercase letter-spacing" style="font-size: 0.65rem;">
+                                    @(item.Category?.CategoryName ?? "Tech")
+                                </span>
+                                
+                                @if (item.StockQuantity > 5)
+                                {
+                                    <span class="text-success stock-badge"><i class="bi bi-check-circle-fill"></i> In Stock</span>
+                                }
+                                else if (item.StockQuantity > 0)
+                                {
+                                    <span class="text-warning stock-badge"><i class="bi bi-exclamation-circle-fill"></i> Low Stock</span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger stock-badge"><i class="bi bi-x-circle-fill"></i> Sold Out</span>
+                                }
+                            </div>
+
+                            <a asp-controller="Shop" asp-action="Details" asp-route-id="@item.ProductId" class="text-decoration-none text-dark">
+                                <h6 class="card-title fw-bold mb-1 text-truncate" title="@item.ProductName">@item.ProductName</h6>
+                            </a>
+
+                            <div class="mb-2 text-warning" style="font-size: 0.85rem;">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                                <span class="text-muted ms-1 small">(Reviews)</span>
+                            </div>
+
+                            <p class="small text-muted mb-3 text-truncate" title="@item.Description">
+                                @(string.IsNullOrEmpty(item.Description) ? "Premium enterprise hardware and software solutions." : item.Description)
+                            </p>
+
+                            <div class="price-tag mt-auto mb-3">@item.Price.ToString("C")</div>
+
+                            <div class="d-grid gap-2">
+                                @if (item.StockQuantity > 0)
+                                {
+                                    <form asp-controller="Cart" asp-action="AddToCart" method="post" class="ajax-cart-form m-0">
+                                        <input type="hidden" name="productId" value="@item.ProductId" />
+                                        <button type="submit" class="btn btn-warning w-100 fw-bold rounded-pill shadow-sm">
+                                            <i class="bi bi-cart-plus me-1"></i> Add to Cart
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-secondary w-100 fw-bold rounded-pill opacity-50" disabled>Out of Stock</button>
+                                }
+                                
+                                <a asp-controller="Shop" asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-light w-100 fw-semibold rounded-pill text-primary border shadow-sm">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+
                     </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5">
+                <div class="bg-white p-5 rounded-4 shadow-sm border mx-auto" style="max-width: 500px;">
+                    <i class="bi bi-shop text-muted mb-3 d-block" style="font-size: 4rem;"></i>
+                    <h4 class="text-dark fw-bold">Nothing to see here yet!</h4>
+                    <p class="text-muted mb-0">Our catalog is currently empty. Check back later for the latest tech drops.</p>
                 </div>
             </div>
         }
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.ajax-cart-form').on('submit', function(e) {
+                e.preventDefault(); // STOP the page from reloading!
+
+                var form = $(this);
+                var url = form.attr('action');
+                var data = form.serialize();
+
+                $.post(url, data, function(response) {
+                    if (response.success) {
+                        var badge = $('#cart-badge');
+                        badge.text(response.newCount);
+                        
+                        if (response.newCount > 0) {
+                            badge.removeClass('bg-secondary text-light').addClass('bg-warning text-dark');
+                        }
+
+                        toastr.success(response.message, 'Success 🛒', { 
+                            "positionClass": "toast-bottom-right",
+                            "timeOut": "3000"
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

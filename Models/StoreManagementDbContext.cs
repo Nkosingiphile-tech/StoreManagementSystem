@@ -31,6 +31,8 @@ public partial class StoreManagementDbContext : IdentityDbContext<IdentityUser>
 
     public DbSet<ChatMessage> ChatMessages { get; set; }
 
+    public DbSet<CartItem> CartItems { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
 

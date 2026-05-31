@@ -1,4 +1,20 @@
-﻿<!DOCTYPE html>
+﻿@using StoreManagementSystem.Models
+@using System.Linq
+@inject StoreManagementDbContext _context
+
+@{
+    // DYNAMIC CART COUNT LOGIC
+    int cartCount = 0;
+    if (User.Identity.IsAuthenticated && !User.IsInRole("Admin"))
+    {
+        // Add up all the quantities of items in this specific user's cart
+        cartCount = _context.CartItems
+            .Where(c => c.CustomerEmail == User.Identity.Name)
+            .Sum(c => c.Quantity);
+    }
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -7,82 +23,114 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/StoreManagementSystem.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
-<body>
+<body class="bg-light">
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark box-shadow mb-4">
-            <div class="container-fluid">
-                <a class="navbar-brand text-white fw-bold" asp-area="" asp-controller="Home" asp-action="Index">Store Management</a>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3 box-shadow">
+            <div class="container-fluid px-4">
+                
+                <a class="navbar-brand text-white fw-bold fs-4" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-cart-check-fill text-warning me-2"></i>Store<span class="text-warning">Hub</span>
+                </a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                <div class="navbar-collapse collapse d-lg-flex justify-content-between align-items-center">
+                    
+                    <form class="d-flex flex-grow-1 mx-lg-5 my-3 my-lg-0">
+                        <div class="input-group">
+                            <select class="form-select text-bg-light border-0" style="max-width: 120px;">
+                                <option>All Depts</option>
+                                <option>Electronics</option>
+                                <option>Software</option>
+                            </select>
+                            <input class="form-control border-0" type="search" placeholder="Search for products, brands and more...">
+                            <button class="btn btn-warning px-4 fw-bold" type="submit">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </form>
 
+                    <ul class="navbar-nav align-items-center">
                         @if (User.IsInRole("Admin"))
                         {
-                            <li class="nav-item">
-                                <a class="nav-link text-white fw-bold" asp-area="Company" asp-controller="Home" asp-action="Index">Dashboard</a>
+                            <li class="nav-item dropdown me-2">
+                                <a class="nav-link dropdown-toggle text-white fw-bold" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                    Admin Panel
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow">
+                                    <li><a class="dropdown-item" asp-area="Company" asp-controller="Home" asp-action="Index"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                                    <li><a class="dropdown-item" asp-area="Company" asp-controller="Products" asp-action="Index"><i class="bi bi-box-seam me-2"></i>Products</a></li>
+                                    <li><a class="dropdown-item" asp-area="Company" asp-controller="Categories" asp-action="Index"><i class="bi bi-tags me-2"></i>Categories</a></li>
+                                    <li><a class="dropdown-item" asp-area="Company" asp-controller="Customers" asp-action="Index"><i class="bi bi-people me-2"></i>Customers</a></li>
+                                    <li><a class="dropdown-item" asp-area="Company" asp-controller="Orders" asp-action="Index"><i class="bi bi-receipt me-2"></i>Orders</a></li>
+                                </ul>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" asp-area="Company" asp-controller="Products" asp-action="Index">Products</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" asp-area="Company" asp-controller="Categories" asp-action="Index">Categories</a>
-                            </li>
-                           
-                            <li class="nav-item">
-                                <a class="nav-link text-white" asp-area="Company" asp-controller="Customers" asp-action="Index">Customers</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" asp-area="Company" asp-controller="Orders" asp-action="Index">Orders</a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link text-dark fw-bold d-flex align-items-center" asp-area="Company" asp-controller="Support" asp-action="Inbox">
-                                    Support Inbox 📥 
-                                    <span id="admin-chat-badge" class="badge bg-danger rounded-pill ms-2" style="display:none;">0</span>
+                            <li class="nav-item me-3">
+                                <a class="nav-link text-white d-flex align-items-center position-relative" asp-area="Company" asp-controller="Support" asp-action="Inbox">
+                                    <i class="bi bi-envelope-fill fs-5"></i>
+                                    <span id="admin-chat-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none; font-size: 0.65em;">0</span>
                                 </a>
                             </li>
-                         }
+                        }
                         else
                         {
-                            <li class="nav-item">
-                                <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <li class="nav-item me-3">
+                                <a class="nav-link text-white fw-semibold" asp-area="" asp-controller="Shop" asp-action="Index">Catalog</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" asp-area="" asp-controller="Shop" asp-action="Index">Shop Catalog</a>
+                            
+                            <li class="nav-item me-3">
+                                <a class="nav-link text-white fw-semibold d-flex align-items-center" asp-area="" asp-controller="Cart" asp-action="Index">
+                                    <i class="bi bi-cart3 fs-5 me-1"></i> Cart
+                                    
+                                    @if (cartCount > 0)
+                                    {
+                                        <span id="cart-badge" class="badge bg-warning text-dark rounded-pill ms-1">@cartCount</span>
+                                    }
+                                    else
+                                    {
+                                        <span id="cart-badge" class="badge bg-secondary text-light rounded-pill ms-1">0</span>
+                                    }
+                                </a>
                             </li>
                         }
 
-                    </ul>
-
-                    <ul class="navbar-nav">
                         <partial name="_LoginPartial" />
                     </ul>
                 </div>
             </div>
         </nav>
+        
+        <div class="bg-secondary text-white py-1 d-none d-md-block">
+            <div class="container-fluid px-4">
+                <ul class="nav small fw-semibold">
+                    <li class="nav-item"><a class="nav-link text-white px-2" href="#">Today's Deals</a></li>
+                    <li class="nav-item"><a class="nav-link text-white px-2" href="#">Customer Service</a></li>
+                    <li class="nav-item"><a class="nav-link text-white px-2" href="#">New Releases</a></li>
+                    <li class="nav-item"><a class="nav-link text-white px-2" href="#">Computers & Accessories</a></li>
+                </ul>
+            </div>
+        </div>
     </header>
-    <div class="container">
+
+    <div class="container-fluid px-4 mt-4">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - StoreManagementSystem - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="border-top footer text-muted bg-white py-4 mt-5">
+        <div class="container text-center">
+            &copy; 2026 - StoreManagementSystem - <a asp-area="" asp-controller="Home" asp-action="Privacy" class="text-decoration-none">Privacy Policy</a>
         </div>
     </footer>
     
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-   
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
@@ -91,21 +139,16 @@
 @if (User.Identity.IsAuthenticated && !User.IsInRole("Admin"))
 {
     <div id="chat-widget-container" class="position-fixed shadow-lg rounded-4" style="bottom: 20px; right: 20px; width: 350px; z-index: 1050; display: none; background: white;">
-        
         <div class="bg-primary text-white p-3 rounded-top d-flex justify-content-between align-items-center">
-            <div class="fw-bold">
-                <span class="fs-5">💬</span> Live Support
-            </div>
+            <div class="fw-bold"><span class="fs-5">💬</span> Live Support</div>
             <div>
                 <button class="btn btn-sm btn-outline-light border-0 me-1" onclick="clearChatHistory()" title="Clear Chat History">🗑️</button>
                 <button class="btn btn-sm btn-close btn-close-white" onclick="toggleChat()"></button>
             </div>
         </div>
-
         <div id="chat-messages" class="p-3 overflow-auto" style="height: 300px; background-color: #f8f9fa;">
             <div class="text-center text-muted small mb-3">Today</div>
         </div>
-
         <div class="p-3 border-top bg-white rounded-bottom">
             <div class="input-group">
                 <input type="text" id="chatMessageInput" class="form-control rounded-start-pill border-secondary" placeholder="Type a message..." autocomplete="off" onkeypress="handleEnter(event)" />
@@ -113,13 +156,9 @@
             </div>
         </div>
     </div>
-
-    <button id="chat-toggle-btn" class="btn btn-primary rounded-circle shadow-lg position-fixed d-flex justify-content-center align-items-center" 
-            style="bottom: 20px; right: 20px; width: 60px; height: 60px; z-index: 1040; transition: transform 0.2s;" 
-            onclick="toggleChat()">
+    <button id="chat-toggle-btn" class="btn btn-primary rounded-circle shadow-lg position-fixed d-flex justify-content-center align-items-center" style="bottom: 20px; right: 20px; width: 60px; height: 60px; z-index: 1040; transition: transform 0.2s;" onclick="toggleChat()">
         <span class="fs-3">💬</span>
     </button>
-
     <style>
         #chat-toggle-btn:hover { transform: scale(1.1); }
         .chat-bubble { max-width: 80%; padding: 10px 15px; border-radius: 20px; margin-bottom: 10px; clear: both; word-wrap: break-word; font-size: 0.95rem; }
@@ -129,130 +168,97 @@
 }
 
     <script>
-    // 1. Setup
-    const currentUserEmail = '@User.Identity?.Name';
-    let chatTargetEmail = currentUserEmail === 'admin@store.com' ? '' : 'admin@store.com';
-    let hasLoadedHistory = false;
+        const currentUserEmail = '@User.Identity?.Name';
+        let chatTargetEmail = currentUserEmail === 'admin@store.com' ? '' : 'admin@store.com';
+        let hasLoadedHistory = false;
 
-    const connection = new signalR.HubConnectionBuilder()
-        .withUrl("/notificationHub")
-        .build();
+        const connection = new signalR.HubConnectionBuilder().withUrl("/notificationHub").build();
 
-    // 2. Order Notifications (I added this back in for you!)
-    connection.on("ReceiveStatusUpdate", function (message) {
-        toastr.info(message, 'Order Update 📦', { "positionClass": "toast-bottom-right", "timeOut": "7000" });
-    });
+        connection.on("ReceiveStatusUpdate", function (message) {
+            toastr.info(message, 'Order Update 📦', { "positionClass": "toast-bottom-right", "timeOut": "7000" });
+        });
 
-    // 3. THE SINGLE, PERFECT CHAT LISTENER
-    connection.on("ReceiveMessage", function (sender, receiver, message) {
-        
-        // --- ADMIN LOGIC (Update the Navbar Badge) ---
-        if (currentUserEmail === 'admin@store.com' && sender !== 'admin@store.com') {
-            toastr.success(`New message from ${sender}`);
-            const badge = document.getElementById('admin-chat-badge');
-            if (badge) {
-                let count = parseInt(badge.innerText) || 0;
-                badge.innerText = count + 1;
-                badge.style.display = 'inline-block';
-            }
-        } 
-        // --- CUSTOMER LOGIC (Update the Floating Widget) ---
-        else if (currentUserEmail !== 'admin@store.com' && (receiver === currentUserEmail || sender === currentUserEmail)) {
-            
-            const isMe = sender === currentUserEmail;
-            const bubbleClass = isMe ? 'chat-sent' : 'chat-received';
-            const senderLabel = isMe ? '' : `<div class="small text-muted mb-1" style="clear:both;">${sender}</div>`;
-
-            const messageHtml = `
-                ${senderLabel}
-                <div class="chat-bubble shadow-sm ${bubbleClass}">${message}</div>
-                <div style="clear: both;"></div>
-            `;
-
-            const chatBox = document.getElementById("chat-messages");
-            if (chatBox) {
-                chatBox.insertAdjacentHTML('beforeend', messageHtml);
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
-
-            // Pop open the window if they receive a message
-            if (!isMe) {
-                document.getElementById('chat-widget-container').style.display = 'block';
-                document.getElementById('chat-toggle-btn').style.display = 'none';
+        connection.on("ReceiveMessage", function (sender, receiver, message) {
+            if (currentUserEmail === 'admin@store.com' && sender !== 'admin@store.com') {
                 toastr.success(`New message from ${sender}`);
-            }
-        }
-    });
-
-    connection.start().catch(err => console.error(err.toString()));
-
-    // 4. UI HELPER FUNCTIONS
-    function toggleChat() {
-        const chatWindow = document.getElementById('chat-widget-container');
-        const chatBtn = document.getElementById('chat-toggle-btn');
-        
-        if (chatWindow.style.display === 'none') {
-            chatWindow.style.display = 'block';
-            chatBtn.style.display = 'none';
-            
-            // Load history only once
-            if (!hasLoadedHistory && currentUserEmail !== 'admin@store.com') {
-                fetchMyHistory();
-            }
-        } else {
-            chatWindow.style.display = 'none';
-            chatBtn.style.display = 'flex';
-        }
-    }
-
-    function fetchMyHistory() {
-        fetch('/Home/GetMyChatHistory')
-            .then(response => response.json())
-            .then(data => {
+                const badge = document.getElementById('admin-chat-badge');
+                if (badge) {
+                    let count = parseInt(badge.innerText) || 0;
+                    badge.innerText = count + 1;
+                    badge.style.display = 'inline-block';
+                }
+            } 
+            else if (currentUserEmail !== 'admin@store.com' && (receiver === currentUserEmail || sender === currentUserEmail)) {
+                const isMe = sender === currentUserEmail;
+                const bubbleClass = isMe ? 'chat-sent' : 'chat-received';
+                const senderLabel = isMe ? '' : `<div class="small text-muted mb-1" style="clear:both;">${sender}</div>`;
+                const messageHtml = `${senderLabel}<div class="chat-bubble shadow-sm ${bubbleClass}">${message}</div><div style="clear: both;"></div>`;
                 const chatBox = document.getElementById("chat-messages");
-                chatBox.innerHTML = '<div class="text-center text-muted small mb-3">Previous Chat History</div>'; 
-                
-                data.forEach(msg => {
-                    const isMe = msg.senderEmail === currentUserEmail;
-                    const bubbleClass = isMe ? 'chat-sent' : 'chat-received';
-                    const html = `
-                        <div class="chat-bubble shadow-sm ${bubbleClass}">${msg.message}</div>
-                        <div style="clear: both;"></div>
-                    `;
-                    chatBox.insertAdjacentHTML('beforeend', html);
+                if (chatBox) {
+                    chatBox.insertAdjacentHTML('beforeend', messageHtml);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+                if (!isMe) {
+                    document.getElementById('chat-widget-container').style.display = 'block';
+                    document.getElementById('chat-toggle-btn').style.display = 'none';
+                    toastr.success(`New message from ${sender}`);
+                }
+            }
+        });
+
+        connection.start().catch(err => console.error(err.toString()));
+
+        function toggleChat() {
+            const chatWindow = document.getElementById('chat-widget-container');
+            const chatBtn = document.getElementById('chat-toggle-btn');
+            if (chatWindow.style.display === 'none') {
+                chatWindow.style.display = 'block';
+                chatBtn.style.display = 'none';
+                if (!hasLoadedHistory && currentUserEmail !== 'admin@store.com') fetchMyHistory();
+            } else {
+                chatWindow.style.display = 'none';
+                chatBtn.style.display = 'flex';
+            }
+        }
+
+        function fetchMyHistory() {
+            fetch('/Home/GetMyChatHistory')
+                .then(response => response.json())
+                .then(data => {
+                    const chatBox = document.getElementById("chat-messages");
+                    chatBox.innerHTML = '<div class="text-center text-muted small mb-3">Previous Chat History</div>'; 
+                    data.forEach(msg => {
+                        const isMe = msg.senderEmail === currentUserEmail;
+                        const bubbleClass = isMe ? 'chat-sent' : 'chat-received';
+                        const html = `<div class="chat-bubble shadow-sm ${bubbleClass}">${msg.message}</div><div style="clear: both;"></div>`;
+                        chatBox.insertAdjacentHTML('beforeend', html);
+                    });
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                    hasLoadedHistory = true; 
                 });
-                
-                chatBox.scrollTop = chatBox.scrollHeight;
-                hasLoadedHistory = true; 
-            });
-    }
-
-    function clearChatHistory() {
-        if(confirm("Are you sure you want to permanently delete your chat history?")) {
-            fetch('/Home/ClearMyChatHistory', { method: 'POST' }).then(() => {
-                document.getElementById("chat-messages").innerHTML = '<div class="text-center text-muted small mb-3">Chat history deleted.</div>';
-                hasLoadedHistory = false; 
-            });
         }
-    }
 
-    function sendChatMessage() {
-        const input = document.getElementById("chatMessageInput");
-        const message = input.value.trim();
-
-        if (message && chatTargetEmail) {
-            input.value = ''; // <-- Clears the box instantly to prevent double-click bugs!
-            
-            connection.invoke("SendMessage", currentUserEmail, chatTargetEmail, message)
-                .catch(err => console.error(err.toString()));
+        function clearChatHistory() {
+            if(confirm("Are you sure you want to permanently delete your chat history?")) {
+                fetch('/Home/ClearMyChatHistory', { method: 'POST' }).then(() => {
+                    document.getElementById("chat-messages").innerHTML = '<div class="text-center text-muted small mb-3">Chat history deleted.</div>';
+                    hasLoadedHistory = false; 
+                });
+            }
         }
-    }
 
-    function handleEnter(e) {
-        if (e.key === 'Enter') sendChatMessage();
-    }
-</script>
+        function sendChatMessage() {
+            const input = document.getElementById("chatMessageInput");
+            const message = input.value.trim();
+            if (message && chatTargetEmail) {
+                input.value = ''; 
+                connection.invoke("SendMessage", currentUserEmail, chatTargetEmail, message).catch(err => console.error(err.toString()));
+            }
+        }
 
- @await RenderSectionAsync("Scripts", required: false)
+        function handleEnter(e) { if (e.key === 'Enter') sendChatMessage(); }
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

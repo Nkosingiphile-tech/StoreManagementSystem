@@ -9,6 +9,11 @@ public partial class Product
 
     public string ProductName { get; set; } = null!;
 
+    // ADDED: For the Landing Page & Shopping Cart
+    public string? ImageUrl { get; set; }
+    
+    public string? Description { get; set; }
+
     public decimal Price { get; set; }
 
     public int StockQuantity { get; set; }
