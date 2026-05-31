@@ -15,6 +15,9 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR(); // For real-time notifications
 builder.Services.AddRazorPages();
+// Turn on the Stripe Payment Engine
+
+Stripe.StripeConfiguration.ApiKey = builder.Configuration.GetSection("Stripe")["SecretKey"];
 
 var app = builder.Build();
 

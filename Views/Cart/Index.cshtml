@@ -99,12 +99,14 @@
                         </div>
                         
                         <div class="d-grid gap-2">
-                            <a href="#" class="btn btn-primary btn-lg fw-bold rounded-pill text-uppercase letter-spacing shadow-sm">
-                                Proceed to Checkout
-                            </a>
-                            <div class="text-center mt-2 small text-muted">
-                                <i class="bi bi-shield-lock-fill text-success"></i> Secure 256-bit SSL encryption
-                            </div>
+                            <form asp-controller="Checkout" asp-action="ProcessCheckout" method="post" class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg fw-bold rounded-pill text-uppercase letter-spacing shadow-sm">
+                                    Proceed to Checkout
+                                </button>
+                                <div class="text-center mt-2 small text-muted">
+                                    <i class="bi bi-shield-lock-fill text-success"></i> Secure 256-bit SSL encryption
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>

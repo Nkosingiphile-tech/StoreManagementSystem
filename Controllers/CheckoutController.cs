@@ -2,13 +2,15 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StoreManagementSystem.Models;
+using Stripe.Checkout;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace StoreManagementSystem.Controllers
 {
-    [Authorize] // Only logged in users can checkout
+    [Authorize]
     public class CheckoutController : Controller
     {
         private readonly StoreManagementDbContext _context;
@@ -18,92 +20,127 @@ namespace StoreManagementSystem.Controllers
             _context = context;
         }
 
+        // --- STEP 1: SEND THEM TO STRIPE ---
         [HttpPost]
         public async Task<IActionResult> ProcessCheckout()
         {
             var userEmail = User.Identity.Name;
-
-            // 1. Get all items from the user's cart
             var cartItems = await _context.CartItems
                 .Include(c => c.Product)
                 .Where(c => c.CustomerEmail == userEmail)
                 .ToListAsync();
 
-            if (!cartItems.Any())
-            {
-                return RedirectToAction("Index", "Cart");
-            }
+            if (!cartItems.Any()) return RedirectToAction("Index", "Cart");
 
-            // 2. Find or Create the Customer profile based on their login email
-            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == userEmail);
-            if (customer == null)
-            {
-                customer = new Customer 
-                { 
-                    Email = userEmail, 
-                    FirstName = "Valued", // Temporary fallback
-                    LastName = "Customer" 
-                };
-                _context.Customers.Add(customer);
-                await _context.SaveChangesAsync(); // Save to generate their CustomerId
-            }
+            // Look at your browser URL bar! Ensure this matches your local port (e.g., 5175 or 5000)
+            var domain = "http://localhost:5175"; 
 
-            // 3. Create the Main Order Receipt
-            decimal subtotal = cartItems.Sum(c => c.Quantity * c.Product.Price);
-            decimal totalWithVat = subtotal + (subtotal * 0.15m);
-
-            var newOrder = new Order
+            var options = new SessionCreateOptions
             {
-                CustomerId = customer.CustomerId,
-                OrderDate = DateTime.Now,
-                TotalAmount = totalWithVat,
-                OrderStatus = "Paid" // (We will hook this to Stripe later!)
+                PaymentMethodTypes = new List<string> { "card" },
+                LineItems = new List<SessionLineItemOptions>(),
+                Mode = "payment",
+                CustomerEmail = userEmail,
+                // Where Stripe sends them AFTER payment:
+                SuccessUrl = domain + "/Checkout/Success?session_id={CHECKOUT_SESSION_ID}", 
+                // Where Stripe sends them if they click the back button:
+                CancelUrl = domain + "/Cart/Index", 
             };
-            _context.Orders.Add(newOrder);
-            await _context.SaveChangesAsync(); // Save to generate the OrderId
 
-            // 4. Create Order Details & DEDUCT STOCK (The Magic Step!)
+            // Package up all their cart items for the Stripe Receipt
             foreach (var item in cartItems)
             {
-                // A. Add it to the permanent Order History
-                var orderDetail = new OrderDetail
+                options.LineItems.Add(new SessionLineItemOptions
                 {
-                    OrderId = newOrder.OrderId,
-                    ProductId = item.ProductId,
-                    Quantity = item.Quantity,
-                    UnitPrice = item.Product.Price
-                };
-                _context.OrderDetails.Add(orderDetail);
-
-                // B. REDUCE THE MASTER INVENTORY STOCK
-                var product = await _context.Products.FindAsync(item.ProductId);
-                if (product != null)
-                {
-                    // Minus the amount they bought from the database!
-                    product.StockQuantity -= item.Quantity;
-                    
-                    // Safety protocol: Don't let stock go into negative numbers
-                    if (product.StockQuantity < 0) 
+                    PriceData = new SessionLineItemPriceDataOptions
                     {
-                        product.StockQuantity = 0;
-                    }
-                }
+                        UnitAmount = (long)(item.Product.Price * 100), // Stripe reads ZAR in cents (R10.00 = 1000)
+                        Currency = "zar",
+                        ProductData = new SessionLineItemPriceDataProductDataOptions
+                        {
+                            Name = item.Product.ProductName,
+                        },
+                    },
+                    Quantity = item.Quantity,
+                });
             }
 
-            // 5. Empty the user's shopping cart now that they bought it
-            _context.CartItems.RemoveRange(cartItems);
-            
-            // 6. Save ALL updates (Orders, Details, Stock drops, Empty Cart) to SQL
-            await _context.SaveChangesAsync();
+            // Generate the Stripe Payment Screen
+            var service = new SessionService();
+            Session session = service.Create(options);
 
-            // 7. Take them to the success screen
-            return RedirectToAction("Success");
+            // Redirect the user out of our app and onto Stripe's secure servers!
+            return Redirect(session.Url);
         }
 
-        // Show the Thank You page
-        public IActionResult Success()
+        // --- STEP 2: THEY PAID! NOW WE DEDUCT STOCK ---
+        public async Task<IActionResult> Success(string session_id)
         {
-            return View();
+            if (string.IsNullOrEmpty(session_id)) return RedirectToAction("Index", "Home");
+
+            // 1. Verify with Stripe that this is a real, paid session
+            var service = new SessionService();
+            Session session = service.Get(session_id);
+
+            if (session.PaymentStatus == "paid")
+            {
+                var userEmail = User.Identity.Name;
+                
+                var cartItems = await _context.CartItems
+                    .Include(c => c.Product)
+                    .Where(c => c.CustomerEmail == userEmail)
+                    .ToListAsync();
+
+                // 2. Find or Create the Customer
+                var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == userEmail);
+                if (customer == null)
+                {
+                    customer = new Customer { Email = userEmail, FirstName = "Valued", LastName = "Customer" };
+                    _context.Customers.Add(customer);
+                    await _context.SaveChangesAsync();
+                }
+
+                // 3. Create the Official Order with the Stripe Session ID
+                var newOrder = new Order
+                {
+                    CustomerId = customer.CustomerId,
+                    OrderDate = DateTime.Now,
+                    TotalAmount = cartItems.Sum(c => c.Quantity * c.Product.Price), // Excludes VAT for simplicity right now
+                    OrderStatus = "Paid",
+                    StripeSessionId = session.Id 
+                };
+                _context.Orders.Add(newOrder);
+                await _context.SaveChangesAsync();
+
+                // 4. Create Details & DEDUCT THE STOCK SAFELY
+                foreach (var item in cartItems)
+                {
+                    var orderDetail = new OrderDetail
+                    {
+                        OrderId = newOrder.OrderId,
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.Product.Price
+                    };
+                    _context.OrderDetails.Add(orderDetail);
+
+                    // Safely minus the stock now that we have their money!
+                    var product = await _context.Products.FindAsync(item.ProductId);
+                    if (product != null)
+                    {
+                        product.StockQuantity -= item.Quantity;
+                        if (product.StockQuantity < 0) product.StockQuantity = 0;
+                    }
+                }
+
+                // 5. Empty their Cart
+                _context.CartItems.RemoveRange(cartItems);
+                await _context.SaveChangesAsync();
+
+                return View();
+            }
+
+            return RedirectToAction("Index", "Home");
         }
     }
 }
