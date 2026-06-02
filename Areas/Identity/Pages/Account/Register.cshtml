@@ -1,137 +1,257 @@
 ﻿@page
 @model StoreManagementSystem.Areas.Identity.Pages.Account.RegisterModel
 @{
-    ViewData["Title"] = "Create Account";
+    ViewData["Title"] = "Create an Account";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <style>
-    /* Premium UI Custom CSS */
-    .auth-card {
-        border-radius: 1.2rem;
-        overflow: hidden;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-        border: none;
+    body {
+        background-color: #f8fafc;
     }
-    .auth-sidebar {
-        background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
-        color: white;
+
+    /* Main Container layout (Matches Login Page) */
+    .split-layout {
+        min-height: 75vh;
+        background-color: #ffffff;
+        border-radius: 1.5rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+    }
+
+    /* Left Side - Form Area */
+    .form-side {
+        padding: 3rem;
         display: flex;
         flex-direction: column;
         justify-content: center;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* Brand Logo styling */
+    .brand-logo {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 2rem;
+        display: flex;
         align-items: center;
-        padding: 3rem;
+        justify-content: center;
+        letter-spacing: -0.5px;
+    }
+
+    .brand-logo i {
+        color: #f8fafc; /* Bright green star */
+        font-size: 2.5rem;
+        margin-right: 0.4rem;
+    }
+
+    /* Pill-shaped Toggle Switch */
+    .auth-toggle {
+        background-color: #f8fafc;
+        border-radius: 3rem;
+        padding: 0.4rem;
+        display: flex;
+        margin-bottom: 1.5rem;
+        border: 1px solid #f1f5f9;
+    }
+
+    .auth-toggle a {
+        flex: 1;
         text-align: center;
+        padding: 0.7rem 1rem;
+        border-radius: 3rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: #475569;
+        transition: all 0.3s ease;
     }
-    .auth-form-wrapper {
-        padding: 3.5rem;
+
+    .auth-toggle a.active {
+        background-color: #ffffff;
+        color: #0f172a;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     }
-    .form-floating label {
-        color: #6c757d;
+
+    /* Input Fields (Soft Grey, No Borders) */
+    .custom-input {
+        background-color: #f8fafc;
+        border: 2px solid transparent;
+        border-radius: 0.8rem;
+        padding: 0.9rem 1.2rem;
+        font-size: 0.95rem;
+        color: #334155;
+        transition: all 0.2s ease;
     }
-    .form-control:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+
+    .custom-input:focus, .input-group:focus-within .custom-input {
+        background-color: #ffffff;
+        border-color: #e2e8f0;
+        box-shadow: 0 0 0 4px rgba(241, 245, 249, 1);
+        outline: none;
     }
-    .btn-register {
-        background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+
+    .form-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 0.5rem;
+    }
+
+    .text-danger-star {
+        color: #ef4444; /* Bright red asterisk */
+    }
+
+    /* Solid Dark Blue Sign In Button */
+    .btn-login {
+        background-color: #1e1b4b; /* Deep Indigo matching the image */
+        color: #ffffff;
+        border-radius: 3rem;
+        padding: 0.9rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s;
         border: none;
-        color: white;
-        transition: transform 0.2s, box-shadow 0.2s;
+        width: 100%;
+        margin-top: 1rem;
     }
-    .btn-register:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3);
-        color: white;
+
+    .btn-login:hover {
+        background-color: #312e81;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(49, 46, 129, 0.2);
+    }
+
+    /* Right Side - Image Area */
+    .image-side {
+        /* Premium electronics lifestyle image */
+        background-image: url('https://images.unsplash.com/photo-1600080972464-8e5f35f63d08?q=80&w=1000&auto=format&fit=crop');
+        background-size: cover;
+        background-position: center;
+        border-radius: 1rem;
+        margin: 1rem;
+        height: calc(100% - 2rem);
+        min-height: 500px;
+    }
+
+    /* Merge input and icon so they look like one continuous box */
+    .password-wrapper .input-group-text {
+        background-color: #f8fafc;
+        border: 2px solid transparent;
+        border-left: none;
+        border-top-right-radius: 0.8rem;
+        border-bottom-right-radius: 0.8rem;
+        cursor: pointer;
+    }
+    
+    .password-wrapper .custom-input {
+        border-right: none;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    
+    .password-wrapper:focus-within .input-group-text {
+        background-color: #ffffff;
+        border-color: #e2e8f0;
+        border-left: none;
     }
 </style>
 
-<div class="container mt-5 mb-5">
-    <div class="row justify-content-center">
-        <div class="col-xl-10">
-            <div class="card auth-card">
-                <div class="row g-0">
-                    
-                    <div class="col-lg-5 auth-sidebar d-none d-lg-flex">
-                        <div class="mb-4" style="font-size: 4.5rem; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.2));">🛍️</div>
-                        <h2 class="fw-bold mb-3">Welcome to the Store!</h2>
-                        <p class="lead mb-4" style="opacity: 0.9;">Join today to discover amazing products, track your orders, and get world-class support.</p>
-                        
-                        <ul class="list-unstyled text-start mb-0" style="opacity: 0.95;">
-                            <li class="mb-3 d-flex align-items-center"><span class="fs-4 me-2">✨</span> Exclusive member discounts</li>
-                            <li class="mb-3 d-flex align-items-center"><span class="fs-4 me-2">📦</span> Fast and easy checkout</li>
-                            <li class="mb-3 d-flex align-items-center"><span class="fs-4 me-2">💬</span> 24/7 Live Customer Support</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="col-lg-7 auth-form-wrapper bg-white">
-                        <div class="text-center mb-4">
-                            <h3 class="fw-bold text-dark">Create an Account</h3>
-                            <p class="text-muted">Fill in your details to get started</p>
-                        </div>
-
-                        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
-                            <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <div class="form-floating">
-                                        <input asp-for="Input.FirstName" class="form-control rounded-3" autocomplete="given-name" aria-required="true" placeholder="John" />
-                                        <label asp-for="Input.FirstName">First Name</label>
-                                        <span asp-validation-for="Input.FirstName" class="text-danger small"></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="form-floating">
-                                        <input asp-for="Input.LastName" class="form-control rounded-3" autocomplete="family-name" aria-required="true" placeholder="Doe" />
-                                        <label asp-for="Input.LastName">Last Name</label>
-                                        <span asp-validation-for="Input.LastName" class="text-danger small"></span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-floating mb-3">
-                                <input asp-for="Input.Email" class="form-control rounded-3" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                                <label asp-for="Input.Email">Email Address</label>
-                                <span asp-validation-for="Input.Email" class="text-danger small"></span>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <div class="form-floating">
-                                        <input asp-for="Input.Password" class="form-control rounded-3" autocomplete="new-password" aria-required="true" placeholder="password" />
-                                        <label asp-for="Input.Password">Password</label>
-                                        <span asp-validation-for="Input.Password" class="text-danger small"></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-4">
-                                    <div class="form-floating">
-                                        <input asp-for="Input.ConfirmPassword" class="form-control rounded-3" autocomplete="new-password" aria-required="true" placeholder="password" />
-                                        <label asp-for="Input.ConfirmPassword">Confirm Password</label>
-                                        <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="d-grid gap-2 mb-4 mt-2">
-                                <button id="registerSubmit" type="submit" class="btn btn-register btn-lg fw-bold rounded-pill py-2 text-uppercase letter-spacing">
-                                    Create My Account
-                                </button>
-                            </div>
-
-                            <div class="text-center text-muted">
-                                Already have an account? 
-                                <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl" class="text-primary fw-bold text-decoration-none border-bottom border-primary pb-1">
-                                    Log in here
-                                </a>
-                            </div>
-                        </form>
-                    </div>
+<div class="container my-5">
+    <div class="split-layout row g-0">
+        
+        <div class="col-lg-6 d-flex">
+            <div class="form-side w-100 text-center">
+                
+                <div class="brand-logo">
+                    <i class="bi bi-star-fill"></i> Welcome To Our Amazing Store
                 </div>
+
+                <div class="auth-toggle">
+                    <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Sign In</a>
+                    <a href="javascript:void(0)" class="active">Create an Account</a>
+                </div>
+
+                <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="text-start">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3 small fw-bold" role="alert"></div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name <span class="text-danger-star">*</span></label>
+                            <input asp-for="Input.FirstName" class="form-control custom-input shadow-none" autocomplete="given-name" aria-required="true" />
+                            <span asp-validation-for="Input.FirstName" class="text-danger small fw-semibold mt-1 d-block"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name <span class="text-danger-star">*</span></label>
+                            <input asp-for="Input.LastName" class="form-control custom-input shadow-none" autocomplete="family-name" aria-required="true" />
+                            <span asp-validation-for="Input.LastName" class="text-danger small fw-semibold mt-1 d-block"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email Address <span class="text-danger-star">*</span></label>
+                        <input asp-for="Input.Email" class="form-control custom-input shadow-none" autocomplete="username" aria-required="true" />
+                        <span asp-validation-for="Input.Email" class="text-danger small fw-semibold mt-1 d-block"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Password <span class="text-danger-star">*</span></label>
+                        <div class="input-group password-wrapper">
+                            <input asp-for="Input.Password" type="password" id="passwordInput" class="form-control custom-input shadow-none" autocomplete="new-password" aria-required="true" />
+                            <span class="input-group-text toggle-password" data-target="passwordInput">
+                                <i class="bi bi-eye text-muted"></i>
+                            </span>
+                        </div>
+                        <span asp-validation-for="Input.Password" class="text-danger small fw-semibold mt-1 d-block"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Confirm Password <span class="text-danger-star">*</span></label>
+                        <div class="input-group password-wrapper">
+                            <input asp-for="Input.ConfirmPassword" type="password" id="confirmPasswordInput" class="form-control custom-input shadow-none" autocomplete="new-password" aria-required="true" />
+                            <span class="input-group-text toggle-password" data-target="confirmPasswordInput">
+                                <i class="bi bi-eye text-muted"></i>
+                            </span>
+                        </div>
+                        <span asp-validation-for="Input.ConfirmPassword" class="text-danger small fw-semibold mt-1 d-block"></span>
+                    </div>
+
+                    <div class="px-sm-4">
+                        <button id="registerSubmit" type="submit" class="btn btn-login shadow-sm">Create Account</button>
+                    </div>
+
+                </form>
+
             </div>
         </div>
+
+        <div class="col-lg-6 d-none d-lg-block">
+            <div class="image-side shadow-sm"></div>
+        </div>
+        
     </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', function () {
+                const targetId = this.getAttribute('data-target');
+                const passwordInput = document.getElementById(targetId);
+                const icon = this.querySelector('i');
+                
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                } else {
+                    passwordInput.type = 'password';
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                }
+            });
+        });
+    </script>
 }

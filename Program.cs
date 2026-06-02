@@ -7,15 +7,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<StoreManagementDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// --- 1. ADD LOCAL IDENTITY WITH ROLE SUPPORT ---
+
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
-    .AddRoles<IdentityRole>() // THIS LINE IS CRUCIAL FOR RBAC!
+    .AddRoles<IdentityRole>() 
     .AddEntityFrameworkStores<StoreManagementDbContext>();
 
 builder.Services.AddControllersWithViews();
-builder.Services.AddSignalR(); // For real-time notifications
+builder.Services.AddSignalR(); 
 builder.Services.AddRazorPages();
-// Turn on the Stripe Payment Engine
+
 
 Stripe.StripeConfiguration.ApiKey = builder.Configuration.GetSection("Stripe")["SecretKey"];
 
@@ -100,7 +100,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapRazorPages(); // Needed for Identity UI routing
+app.MapRazorPages();
 
 app.MapHub<StoreManagementSystem.Hubs.NotificationHub>("/notificationHub");
 app.Run();

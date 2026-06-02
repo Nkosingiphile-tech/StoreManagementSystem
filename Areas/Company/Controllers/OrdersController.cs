@@ -230,16 +230,28 @@ namespace StoreManagementSystem.Areas.Company.Controllers
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var order = await _context.Orders.FindAsync(id);
-            if (order != null)
-            {
-                _context.Orders.Remove(order);
-            }
+{
+    // 1. Fetch the Order AND all of its related Order Details
+    var order = await _context.Orders
+        .Include(o => o.OrderDetails) 
+        .FirstOrDefaultAsync(o => o.OrderId == id);
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+    if (order != null)
+    {
+        // 2. Safely delete the child items first so they don't become orphans
+        if (order.OrderDetails != null && order.OrderDetails.Any())
+        {
+            _context.OrderDetails.RemoveRange(order.OrderDetails);
         }
+
+        // 3. Now it is safe to delete the parent Order!
+        _context.Orders.Remove(order);
+        
+        await _context.SaveChangesAsync();
+    }
+    
+    return RedirectToAction(nameof(Index));
+}
         // GET: Orders/AddProduct/5 (5 is the OrderId)
         public IActionResult AddProduct(int id)
         {

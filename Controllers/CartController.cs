@@ -23,7 +23,11 @@ namespace StoreManagementSystem.Controllers
         {
             var userEmail = User.Identity.Name;
 
-            // Fetch all items in this user's cart, and include the Product details (Name, Price, Image)
+            // 1. Pass the customer to ViewBag so the Cart can pre-fill their address!
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == userEmail);
+            ViewBag.Customer = customer;
+
+            // 2. Load their cart items
             var cartItems = await _context.CartItems
                 .Include(c => c.Product)
                 .Where(c => c.CustomerEmail == userEmail)

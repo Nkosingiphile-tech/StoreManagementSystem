@@ -1,0 +1,188 @@
+@model StoreManagementSystem.Models.Order
+@{
+    ViewData["Title"] = "Track Order #" + Model.OrderId;
+    
+    // Logic to determine how far the progress bar should go
+    int progressPercentage = 25; // Default for "Paid/Processing"
+    bool isShipped = false;
+    bool isDelivered = false;
+
+    if (Model.OrderStatus == "Shipped")
+    {
+        progressPercentage = 60;
+        isShipped = true;
+    }
+    else if (Model.OrderStatus == "Delivered")
+    {
+        progressPercentage = 100;
+        isShipped = true;
+        isDelivered = true;
+    }
+
+    // Dynamic Math to fix old test orders and ensure perfect VAT calculations on screen
+    decimal calculatedSubtotal = Model.OrderDetails?.Sum(od => od.UnitPrice * od.Quantity) ?? 0m;
+    decimal calculatedVat = calculatedSubtotal * 0.15m;
+    decimal calculatedTotal = calculatedSubtotal * 1.15m;
+}
+
+<style>
+    /* Premium Visual Tracking Bar CSS */
+    .tracking-wrapper {
+        position: relative;
+        padding: 3rem 0;
+    }
+    .tracking-line {
+        position: absolute;
+        top: 50%;
+        left: 10%;
+        right: 10%;
+        height: 6px;
+        background-color: #e2e8f0;
+        transform: translateY(-50%);
+        border-radius: 10px;
+        z-index: 1;
+    }
+    .tracking-progress {
+        position: absolute;
+        top: 50%;
+        left: 10%;
+        height: 6px;
+        background-color: #10b981; /* Success Green */
+        transform: translateY(-50%);
+        border-radius: 10px;
+        z-index: 2;
+        transition: width 1s ease-in-out;
+    }
+    .tracking-step {
+        position: relative;
+        z-index: 3;
+        text-align: center;
+        width: 33.33%;
+    }
+    .tracking-icon {
+        width: 50px;
+        height: 50px;
+        background-color: #ffffff;
+        border: 4px solid #e2e8f0;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: #94a3b8;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+    .tracking-icon.completed {
+        border-color: #10b981;
+        background-color: #10b981;
+        color: #ffffff;
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    }
+</style>
+
+<div class="container my-5">
+    <a asp-action="Index" class="text-decoration-none text-muted mb-4 d-inline-block fw-semibold">
+        <i class="bi bi-arrow-left"></i> Back to all orders
+    </a>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        
+        <div class="card-header bg-dark text-white p-4 d-flex justify-content-between align-items-center border-0">
+            <div>
+                <h4 class="mb-0 fw-bold">Order #@Model.OrderId</h4>
+                <small class="text-white-50">Placed on @(Model.OrderDate?.ToString("MMMM dd, yyyy - hh:mm tt"))</small>
+            </div>
+            <div class="text-end">
+                <h4 class="mb-0 fw-bold text-success">@calculatedTotal.ToString("C")</h4>
+                <small class="text-white-50">Paid via Stripe</small>
+            </div>
+        </div>
+
+        <div class="card-body p-5 bg-light border-bottom">
+            <h5 class="fw-bold text-center mb-4 text-dark">Tracking Status</h5>
+            
+            <div class="d-flex tracking-wrapper">
+                <div class="tracking-line"></div>
+                <div class="tracking-progress" style="width: @progressPercentage%;"></div>
+
+                <div class="tracking-step">
+                    <div class="tracking-icon completed">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <div class="mt-2 fw-bold text-dark">Processing</div>
+                    <small class="text-muted">Order confirmed</small>
+                </div>
+
+                <div class="tracking-step">
+                    <div class="tracking-icon @(isShipped ? "completed" : "")">
+                        <i class="bi bi-truck"></i>
+                    </div>
+                    <div class="mt-2 fw-bold @(isShipped ? "text-dark" : "text-muted")">Shipped</div>
+                    <small class="text-muted">On the way</small>
+                </div>
+
+                <div class="tracking-step">
+                    <div class="tracking-icon @(isDelivered ? "completed" : "")">
+                        <i class="bi bi-house-door"></i>
+                    </div>
+                    <div class="mt-2 fw-bold @(isDelivered ? "text-dark" : "text-muted")">Delivered</div>
+                    <small class="text-muted">Package arrived</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+            <h5 class="fw-bold mb-4 border-bottom pb-2">Items in this order</h5>
+            
+            <div class="table-responsive">
+                <table class="table table-borderless align-middle">
+                    <tbody>
+                        @foreach (var detail in Model.OrderDetails)
+                        {
+                            <tr class="border-bottom">
+                                <td style="width: 80px;">
+                                    @if (!string.IsNullOrEmpty(detail.Product.ImageUrl))
+                                    {
+                                        <img src="@detail.Product.ImageUrl" class="img-fluid rounded shadow-sm" style="height: 60px; object-fit: contain;">
+                                    }
+                                    else
+                                    {
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 60px; width: 60px;">
+                                            <i class="bi bi-speaker text-muted"></i>
+                                        </div>
+                                    }
+                                </td>
+                                <td>
+                                    <h6 class="fw-bold mb-0 text-dark">@detail.Product.ProductName</h6>
+                                    <small class="text-muted">Qty: @detail.Quantity</small>
+                                </td>
+                                <td class="text-end fw-bold text-dark">
+                                    @((detail.UnitPrice * detail.Quantity).ToString("C"))
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="row justify-content-end mt-4">
+                <div class="col-md-5 col-lg-4 text-end">
+                    <p class="text-muted mb-1 d-flex justify-content-between">
+                        <span>Subtotal:</span> 
+                        <span>@calculatedSubtotal.ToString("C")</span>
+                    </p>
+                    <p class="text-muted mb-2 d-flex justify-content-between border-bottom pb-2">
+                        <span>VAT (15%):</span> 
+                        <span>@calculatedVat.ToString("C")</span>
+                    </p>
+                    <h5 class="fw-bold text-dark d-flex justify-content-between">
+                        <span>Total:</span> 
+                        <span>@calculatedTotal.ToString("C")</span>
+                    </h5>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

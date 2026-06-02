@@ -1,110 +1,431 @@
 ﻿@model IEnumerable<StoreManagementSystem.Models.Product>
 @{
     ViewData["Title"] = "Home";
+    
+    // Grab up to 3 products from the database that actually have images for the Hero Banner
+    var heroProducts = Model?.Where(p => !string.IsNullOrEmpty(p.ImageUrl)).Take(3).ToList() ?? new List<StoreManagementSystem.Models.Product>();
 }
 
 <style>
-    .product-card {
-        transition: transform 0.2s, box-shadow 0.2s;
-        border: 1px solid #e0e0e0;
+    /* 1. Color Palette & Base Spacing */
+    :root {
+        --deep-navy: #020617;      
+        --shadow-blue: #1e3a8a;    
+        --accent-blue: #3B82F6;    
+        --soft-white: #ffffff;
+        --bento-bg: #121212;       /* Dark background for the new section */
+        --bento-card: #1c1c1c;     /* Dark grey for the category cards */
     }
-    .product-card:hover {
+
+    html { scroll-behavior: smooth; }
+    body { background-color: #F8FAFC; }
+
+    /* 2. The Hero Banner - Strong Navy Shadow */
+    .hero-banner {
+        background: linear-gradient(135deg, var(--deep-navy) 0%, var(--shadow-blue) 100%);
+        border-radius: 2rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(2, 6, 23, 0.5); 
+    }
+
+    /* 3. Animations */
+    .floating-element { animation: float 6s ease-in-out infinite; }
+
+    @@keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-15px); }
+        100% { transform: translateY(0px); }
+    }
+
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 4. Hero Carousel Container */
+    .hero-carousel-container {
+        height: 350px;
+        background: radial-gradient(circle, #ffffff 0%, #F1F5F9 100%);
+        position: relative;
+        overflow: hidden;
+        border-radius: 1rem;
+    }
+    
+    .hero-carousel-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 2rem;
+        transition: transform 0.5s;
+    }
+
+    /* =========================================
+       NEW: BENTO BOX CATEGORY GRID STYLES
+       ========================================= */
+    .bento-section {
+        background-color: var(--bento-bg);
+        border-radius: 2rem;
+        padding: 3rem 2rem;
+        box-shadow: inset 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .bento-card {
+        background-color: var(--bento-card);
+        border-radius: 1rem;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+        min-height: 260px;
+        transition: transform 0.3s ease, background-color 0.3s ease;
+        border: 1px solid rgba(255,255,255,0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .bento-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        cursor: pointer;
+        background-color: #242424;
     }
+
+    .bento-title {
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+        z-index: 2;
+    }
+
+    .btn-bento {
+        background: transparent;
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 2rem;
+        padding: 0.4rem 1.5rem;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        z-index: 2;
+        text-decoration: none;
+    }
+
+    .btn-bento:hover {
+        background: white;
+        color: black;
+    }
+
+    /* Position the images dynamically inside the dark cards */
+    .bento-img {
+        position: absolute;
+        bottom: -10%;
+        right: -10%;
+        max-height: 180px;
+        transition: transform 0.4s ease;
+        z-index: 1;
+    }
+    
+    .bento-card:hover .bento-img {
+        transform: scale(1.05) translate(-10px, -10px);
+    }
+
+    /* Special center text block */
+    .bento-text-block {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        background-color: transparent;
+        border: none;
+    }
+
+    .bento-text-block h2 {
+        color: #888;
+        font-weight: 800;
+        font-size: 2.5rem;
+        line-height: 1.1;
+    }
+
+    .bento-text-block h2 span {
+        color: white;
+        display: block;
+        position: relative;
+    }
+
+    .bento-text-block h2 span::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 20%;
+        right: 20%;
+        height: 3px;
+        background: linear-gradient(90deg, #8B5CF6, #3B82F6, #10B981);
+        border-radius: 2px;
+    }
+
+    /* 5. The Product Cards (Featured Section) */
+    .product-card {
+        border: none;
+        border-radius: 1.5rem;
+        background: var(--soft-white);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        opacity: 0;
+        animation: fadeInUp 0.8s ease-out forwards;
+    }
+
+    .col:nth-child(1) .product-card { animation-delay: 0.1s; }
+    .col:nth-child(2) .product-card { animation-delay: 0.2s; }
+    .col:nth-child(3) .product-card { animation-delay: 0.3s; }
+    .col:nth-child(4) .product-card { animation-delay: 0.4s; }
+    .col:nth-child(5) .product-card { animation-delay: 0.5s; }
+
+    .product-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(30, 58, 138, 0.15); 
+    }
+
     .product-image-container {
-        height: 200px;
+        height: 240px;
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: #f8f9fa;
-        overflow: hidden;
+        background: radial-gradient(circle, #ffffff 0%, #F1F5F9 100%);
+        padding: 1.5rem;
+        border-top-left-radius: 1.5rem;
+        border-top-right-radius: 1.5rem;
+        position: relative; 
+        overflow: hidden;   
     }
-    .product-image-container img {
+
+    .product-image-container > img, .product-image-container > i {
         max-height: 100%;
         object-fit: contain;
+        transition: transform 0.5s;
     }
+
+    .product-card:hover .product-image-container > img,
+    .hero-carousel-container:hover img {
+        transform: scale(1.08); 
+    }
+
+    .cart-overlay {
+        position: absolute;
+        bottom: -90px; 
+        left: 0;
+        right: 0;
+        opacity: 0;
+        transition: all 0.3s ease-in-out;
+        padding: 1.5rem 1rem 1rem 1rem;
+        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); 
+        text-align: center;
+    }
+
+    .product-card:hover .cart-overlay,
+    .hero-carousel-container:hover .cart-overlay {
+        bottom: 0; 
+        opacity: 1; 
+    }
+
     .price-tag {
-        font-size: 1.25rem;
+        font-size: 1.5rem;
         font-weight: 800;
-        color: #b12704; /* Amazon Red */
+        color: var(--shadow-blue); 
+    }
+
+    .btn-custom {
+        background: linear-gradient(135deg, var(--accent-blue) 0%, #2563EB 100%);
+        color: white;
+        border: none;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .btn-custom:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+        color: white;
     }
 </style>
 
-<div id="homePromoCarousel" class="carousel slide mb-5 shadow-sm rounded overflow-hidden" data-bs-ride="carousel">
-    <div class="carousel-inner">
-        <div class="carousel-item active" style="background-color: #0d6efd; height: 350px;">
-            <div class="container h-100 d-flex align-items-center">
-                <div class="text-white col-md-6">
-                    <h1 class="fw-bold display-5">Up to 50% Off Top Tech</h1>
-                    <p class="lead">Upgrade your setup with the latest enterprise software and hardware.</p>
-                    <a href="#" class="btn btn-warning btn-lg fw-bold mt-2">Shop the Sale</a>
-                </div>
+<!-- 🌸 BEAUTIFUL DARK NAVY HERO SECTION -->
+<div class="container-fluid px-lg-4 mt-3 mb-4">
+    <div class="hero-banner p-4 p-md-5 d-flex align-items-center" style="min-height: 450px;">
+        <div class="row w-100 align-items-center mx-0">
+            <!-- Text Side -->
+            <div class="col-lg-6 p-lg-5 text-center text-lg-start z-1">
+                <span class="badge bg-light bg-opacity-10 text-info border border-info mb-3 px-4 py-2 rounded-pill shadow-sm" style="font-weight: 700; letter-spacing: 1px;">
+                    ✨ Premium Devices
+                </span>
+                <h1 class="display-4 fw-bold mb-4 text-white" style="line-height: 1.2;">
+                    Upgrade Your <br /> Digital Lifestyle.
+                </h1>
+                <p class="lead mb-4 mx-auto mx-lg-0 text-white opacity-75" style="max-width: 450px;">
+                    Your ultimate destination for premium electronics. Find your next favorite device from our top-rated collection below.
+                </p>
+                <a href="#featured-products" class="btn btn-custom btn-lg rounded-pill px-5 py-3 fw-bold shadow">
+                    Shop Collection <i class="bi bi-arrow-down-circle ms-2"></i>
+                </a>
             </div>
-        </div>
-        <div class="carousel-item" style="background-color: #212529; height: 350px;">
-            <div class="container h-100 d-flex align-items-center">
-                <div class="text-white col-md-6">
-                    <h1 class="fw-bold display-5">New Arrivals are Here</h1>
-                    <p class="lead">Discover the newest tools for developers and IT professionals.</p>
-                    <a href="#" class="btn btn-light btn-lg fw-bold mt-2">Explore Now</a>
+
+            <!-- Image Side (Dynamic Database Carousel) -->
+            <div class="col-lg-6 text-center d-none d-lg-block position-relative">
+                <div id="dynamicHeroCarousel" class="carousel slide floating-element shadow-lg mx-auto" data-bs-ride="carousel" data-bs-interval="3000" style="max-width: 500px; border: 8px solid rgba(255, 255, 255, 0.1); border-radius: 1rem;">
+                    <div class="carousel-inner hero-carousel-container">
+                        @if (heroProducts.Any())
+                        {
+                            for (int i = 0; i < heroProducts.Count; i++)
+                            {
+                                var p = heroProducts[i];
+                                <div class="carousel-item @(i == 0 ? "active" : "") h-100">
+                                    <img src="@p.ImageUrl" alt="@p.ProductName">
+                                    <div class="cart-overlay">
+                                        <h5 class="text-white fw-bold text-truncate mb-2" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">@p.ProductName</h5>
+                                        <form asp-controller="Cart" asp-action="AddToCart" method="post" class="ajax-cart-form m-0 px-3">
+                                            <input type="hidden" name="productId" value="@p.ProductId" />
+                                            <button type="submit" class="btn btn-warning w-100 fw-bold rounded-pill shadow-lg py-2">
+                                                <i class="bi bi-cart-plus me-1"></i> Add to Cart
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="carousel-item active h-100 d-flex justify-content-center align-items-center">
+                                <i class="bi bi-box-seam opacity-25" style="font-size: 5rem; color: var(--shadow-blue);"></i>
+                            </div>
+                        }
+                    </div>
+                    @if (heroProducts.Count > 1)
+                    {
+                        <button class="carousel-control-prev" type="button" data-bs-target="#dynamicHeroCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon bg-dark rounded-circle p-3" aria-hidden="true" style="opacity: 0.5;"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#dynamicHeroCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon bg-dark rounded-circle p-3" aria-hidden="true" style="opacity: 0.5;"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    }
                 </div>
             </div>
         </div>
     </div>
-    <button class="carousel-control-prev" type="button" data-bs-target="#homePromoCarousel" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon"></span>
-    </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#homePromoCarousel" data-bs-slide="next">
-        <span class="carousel-control-next-icon"></span>
-    </button>
 </div>
 
-<div class="container-fluid mb-5">
-    <h3 class="fw-bold mb-4 border-bottom pb-2">Featured Products</h3>
+<!-- 📦 NEW: SHOP BY CATEGORY (BENTO GRID) -->
+<div class="container-fluid px-lg-4 mb-5">
+    <div class="bento-section">
+        <div class="bento-grid">
+            
+            <!-- Card 1: TV & Entertainment -->
+            <div class="bento-card">
+                <h3 class="bento-title">Watch. Listen. Experience.</h3>
+                <!-- Notice the asp-route-category attribute below. This passes the word "Entertainment" to the Shop Controller! -->
+                <a asp-controller="Shop" asp-action="Index" asp-route-category="Entertainment" class="btn-bento">Shop Now</a>
+                <img src="https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?q=80&w=600&auto=format&fit=crop&bg=transparent" class="bento-img" style="right: -5%; max-height: 200px;" alt="TVs">
+            </div>
 
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-        
+            <!-- Card 2: Smartphones -->
+            <div class="bento-card">
+                <h3 class="bento-title">Call. Chat. Connect.</h3>
+                <a asp-controller="Shop" asp-action="Index" asp-route-category="Phones" class="btn-bento">Shop Now</a>
+                <img src="https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?q=80&w=400&auto=format&fit=crop" class="bento-img" style="bottom: -20px; right: 10%; max-height: 220px; object-fit: contain;" alt="Phones">
+            </div>
+
+            <!-- Card 3: Wearables -->
+            <div class="bento-card">
+                <h3 class="bento-title">Run. Track. Explore.</h3>
+                <a asp-controller="Shop" asp-action="Index" asp-route-category="Wearables" class="btn-bento">Shop Now</a>
+                <img src="https://images.unsplash.com/photo-1579586337278-3befd40fd17a?q=80&w=400&auto=format&fit=crop" class="bento-img" style="bottom: -15%; right: -5%; max-height: 180px;" alt="Smart Watches">
+            </div>
+
+            <!-- Card 4: Home & Appliances -->
+            <div class="bento-card">
+                <h3 class="bento-title">Cosy. Cook. Clean.</h3>
+                <a asp-controller="Shop" asp-action="Index" asp-route-category="Home" class="btn-bento">Shop Now</a>
+                <img src="https://images.unsplash.com/photo-1585659722983-3a6750f2fd82?q=80&w=400&auto=format&fit=crop" class="bento-img" style="bottom: -10%; right: -10%; max-height: 200px;" alt="Appliances">
+            </div>
+
+            <!-- Card 5: Gaming -->
+            <div class="bento-card">
+                <h3 class="bento-title">Play. Compete. Win.</h3>
+                <a asp-controller="Shop" asp-action="Index" asp-route-category="Gaming" class="btn-bento">Shop Now</a>
+                <img src="https://images.unsplash.com/photo-1605901309584-818e25960b8f?q=80&w=400&auto=format&fit=crop" class="bento-img" style="bottom: -5%; right: -5%; max-height: 160px;" alt="Gaming Consoles">
+            </div>
+
+            <!-- Card 6: Center Branding Text -->
+            <div class="bento-card bento-text-block">
+                <h2>Shop <span>With us.</span></h2>
+            </div>
+
+            <!-- Card 7: Laptops & Computers -->
+            <div class="bento-card">
+                <h3 class="bento-title">Work. Study. Achieve.</h3>
+                <a asp-controller="Shop" asp-action="Index" asp-route-category="Laptops" class="btn-bento">Shop Now</a>
+                <img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=600&auto=format&fit=crop" class="bento-img" style="bottom: -15%; right: -10%; max-height: 200px;" alt="Laptops">
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- 🛍️ PRODUCTS GRID (Dynamic All Products) -->
+<div id="featured-products" class="container-fluid px-lg-5 mb-5 pt-4">
+    <div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-3">
+        <h3 class="fw-bold mb-0" style="color: var(--deep-navy);">Featured Collection</h3>
+        <span class="text-muted fw-semibold">Handpicked for you</span>
+    </div>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 pt-2">
         @if (Model != null && Model.Any())
         {
             foreach (var item in Model)
             {
                 <div class="col">
-                    <div class="card h-100 product-card rounded-3">
-                        
-                        <div class="product-image-container rounded-top-3">
+                    <div class="card h-100 product-card">
+                        <div class="product-image-container">
                             @if (!string.IsNullOrEmpty(item.ImageUrl))
                             {
-                                <img src="@item.ImageUrl" class="img-fluid p-3" alt="@item.ProductName">
+                                <img src="@item.ImageUrl" alt="@item.ProductName">
                             }
                             else
                             {
-                                <div class="bg-light w-100 h-100 d-flex justify-content-center align-items-center">
-                                    <i class="bi bi-laptop text-secondary" style="font-size: 3rem;"></i>
-                                </div>
+                                <i class="bi bi-speaker opacity-25" style="font-size: 4rem; color: var(--shadow-blue);"></i>
                             }
-                        </div>
 
-                        <div class="card-body d-flex flex-column">
-                            <h6 class="card-title text-truncate fw-bold mb-1">@item.ProductName</h6>
-                            <p class="small text-muted mb-2 text-truncate" title="@item.Description">
-                                @(string.IsNullOrEmpty(item.Description) ? "Enterprise Tech Hardware/Software" : item.Description)
-                            </p>
-                            
-                            <div class="mb-2 text-warning small">
-                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                            <!-- 🪄 THE HIDDEN OVERLAY CART BUTTON -->
+                            <div class="cart-overlay">
+                                <form asp-controller="Cart" asp-action="AddToCart" method="post" class="ajax-cart-form m-0">
+                                    <input type="hidden" name="productId" value="@item.ProductId" />
+                                    <button type="submit" class="btn btn-warning w-100 fw-bold rounded-pill shadow-lg py-2">
+                                        <i class="bi bi-cart-plus me-1"></i> Add to Cart
+                                    </button>
+                                </form>
                             </div>
-                            
-                            <div class="price-tag mt-auto">@item.Price.ToString("C")</div>
-                            
-                            <form asp-controller="Cart" asp-action="AddToCart" method="post" class="mt-3 ajax-cart-form">
-                            <input type="hidden" name="productId" value="@item.ProductId" />
-                            <button type="submit" class="btn btn-warning w-100 fw-bold rounded-pill shadow-sm">Add to Cart</button>
-                        </form>
-                            
                         </div>
 
+                        <div class="card-body d-flex flex-column p-4">
+                            <span class="badge bg-light text-muted mb-2 align-self-start rounded-pill px-3 py-1 border">
+                                @(item.Category?.CategoryName ?? "Electronics")
+                            </span>
+                            <h5 class="card-title text-truncate fw-bold mb-1" style="color: #1e293b;">@item.ProductName</h5>
+                            <p class="small text-muted mb-3 text-truncate" title="@item.Description">
+                                @(string.IsNullOrEmpty(item.Description) ? "Experience premium audio, vivid displays, and top-tier performance." : item.Description)
+                            </p>
+                            <div class="mb-3" style="color: #FBBF24; font-size: 0.9rem;">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                                <span class="text-muted ms-1 small">(Reviews)</span>
+                            </div>
+                            <div class="price-tag mt-auto">@item.Price.ToString("C")</div>
+                        </div>
                     </div>
                 </div>
             }
@@ -112,40 +433,35 @@
         else
         {
             <div class="col-12 text-center py-5">
-                <i class="bi bi-box-seam text-muted mb-3" style="font-size: 3rem;"></i>
-                <h5 class="text-muted fw-bold">No products available right now.</h5>
-                <p class="text-muted">The Admin needs to add products to the catalog!</p>
+                <div class="bg-white p-5 rounded-4 shadow-sm border mx-auto" style="max-width: 500px;">
+                    <i class="bi bi-moon-stars text-muted mb-3 d-block" style="font-size: 4rem; color: var(--shadow-blue) !important;"></i>
+                    <h4 class="fw-bold" style="color: var(--deep-navy);">Quiet Right Now</h4>
+                    <p class="text-muted mb-0">Our new collection is currently being prepared. Check back soon for stunning new arrivals.</p>
+                </div>
             </div>
         }
-
     </div>
 </div>
 
+<!-- AJAX SCRIPT TO KEEP IT ON THE SAME PAGE -->
 @section Scripts {
     <script>
         $(document).ready(function() {
-            // Listen for any form with the 'ajax-cart-form' class to be submitted
             $('.ajax-cart-form').on('submit', function(e) {
-                e.preventDefault(); // STOP the page from reloading!
-
+                e.preventDefault(); 
                 var form = $(this);
                 var url = form.attr('action');
                 var data = form.serialize();
 
-                // Send the data to the server in the background
                 $.post(url, data, function(response) {
                     if (response.success) {
-                        
-                        // 1. Find the cart badge and update the number
                         var badge = $('#cart-badge');
                         badge.text(response.newCount);
                         
-                        // 2. If it was gray (0), turn it yellow!
                         if (response.newCount > 0) {
                             badge.removeClass('bg-secondary text-light').addClass('bg-warning text-dark');
                         }
 
-                        // 3. Show a beautiful green popup notification
                         toastr.success(response.message, 'Success 🛒', { 
                             "positionClass": "toast-bottom-right",
                             "timeOut": "3000"

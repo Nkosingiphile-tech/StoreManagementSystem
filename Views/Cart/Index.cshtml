@@ -2,7 +2,6 @@
 @{
     ViewData["Title"] = "Shopping Cart";
     decimal subtotal = Model?.Sum(item => item.Quantity * item.Product.Price) ?? 0;
-    // Standard 15% VAT calculation
     decimal vat = subtotal * 0.15m;
     decimal total = subtotal + vat;
 }
@@ -26,7 +25,7 @@
     else
     {
         <div class="row g-4">
-            <div class="col-lg-8">
+            <div class="col-lg-7 col-xl-8">
                 <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-header bg-white border-bottom py-3">
                         <h5 class="mb-0 fw-bold">Cart Items (@Model.Count())</h5>
@@ -78,7 +77,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-4">
+            <div class="col-lg-5 col-xl-4">
                 <div class="card border-0 shadow-sm rounded-4 position-sticky" style="top: 2rem;">
                     <div class="card-header bg-white border-bottom py-3">
                         <h5 class="mb-0 fw-bold">Order Summary</h5>
@@ -98,16 +97,31 @@
                             <span class="fs-5 fw-bold text-success">@total.ToString("C")</span>
                         </div>
                         
-                        <div class="d-grid gap-2">
-                            <form asp-controller="Checkout" asp-action="ProcessCheckout" method="post" class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary btn-lg fw-bold rounded-pill text-uppercase letter-spacing shadow-sm">
-                                    Proceed to Checkout
-                                </button>
-                                <div class="text-center mt-2 small text-muted">
-                                    <i class="bi bi-shield-lock-fill text-success"></i> Secure 256-bit SSL encryption
+                        <form asp-controller="Checkout" asp-action="ProcessCheckout" method="post" class="d-grid gap-2">
+                            
+                            <h6 class="fw-bold mb-3 mt-2 text-dark">Delivery Address</h6>
+                            
+                            <input type="text" name="StreetAddress" value="@ViewBag.Customer?.StreetAddress" class="form-control bg-light border-0 mb-2 py-2" required placeholder="Street Address" />
+                            
+                            <div class="row g-2 mb-2">
+                                <div class="col-6">
+                                    <input type="text" name="City" value="@ViewBag.Customer?.City" class="form-control bg-light border-0 py-2" required placeholder="City / Suburb" />
                                 </div>
-                            </form>
-                        </div>
+                                <div class="col-6">
+                                    <input type="text" name="PostalCode" value="@ViewBag.Customer?.PostalCode" class="form-control bg-light border-0 py-2" required placeholder="Postal Code" />
+                                </div>
+                            </div>
+                            
+                            <input type="text" name="PhoneNumber" value="@ViewBag.Customer?.PhoneNumber" class="form-control bg-light border-0 mb-4 py-2" required placeholder="Phone Number" />
+
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold rounded-pill text-uppercase letter-spacing shadow-sm">
+                                Proceed to Checkout
+                            </button>
+                            <div class="text-center mt-2 small text-muted">
+                                <i class="bi bi-shield-lock-fill text-success"></i> Secure 256-bit SSL encryption
+                            </div>
+                        </form>
+
                     </div>
                 </div>
             </div>

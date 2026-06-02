@@ -20,9 +20,9 @@ namespace StoreManagementSystem.Controllers
             _context = context;
         }
 
-        // --- STEP 1: SEND THEM TO STRIPE ---
         [HttpPost]
-        public async Task<IActionResult> ProcessCheckout()
+        // WE NOW ACCEPT THE ADDRESS DIRECTLY FROM THE CART FORM!
+        public async Task<IActionResult> ProcessCheckout(string StreetAddress, string City, string PostalCode, string PhoneNumber)
         {
             var userEmail = User.Identity.Name;
             var cartItems = await _context.CartItems
@@ -30,9 +30,29 @@ namespace StoreManagementSystem.Controllers
                 .Where(c => c.CustomerEmail == userEmail)
                 .ToListAsync();
 
-            if (!cartItems.Any()) return RedirectToAction("Index", "Cart");
+            if (cartItems == null || !cartItems.Any())
+            {
+                TempData["Error"] = "Your cart is empty. Please add items before checking out.";
+                return RedirectToAction("Index", "Cart");
+            }
 
-            // Look at your browser URL bar! Ensure this matches your local port (e.g., 5175 or 5000)
+            // --- NEW: SAVE THE ADDRESS BEFORE THEY PAY ---
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == userEmail);
+            if (customer == null)
+            {
+                // If they just registered, create them now
+                customer = new Customer { Email = userEmail, FirstName = "Valued", LastName = "Customer" };
+                _context.Customers.Add(customer);
+            }
+            
+            // Save the typed address into the database
+            customer.StreetAddress = StreetAddress;
+            customer.City = City;
+            customer.PostalCode = PostalCode;
+            customer.PhoneNumber = PhoneNumber;
+            await _context.SaveChangesAsync();
+            // ---------------------------------------------
+
             var domain = "http://localhost:5175"; 
 
             var options = new SessionCreateOptions
@@ -41,21 +61,20 @@ namespace StoreManagementSystem.Controllers
                 LineItems = new List<SessionLineItemOptions>(),
                 Mode = "payment",
                 CustomerEmail = userEmail,
-                // Where Stripe sends them AFTER payment:
                 SuccessUrl = domain + "/Checkout/Success?session_id={CHECKOUT_SESSION_ID}", 
-                // Where Stripe sends them if they click the back button:
                 CancelUrl = domain + "/Cart/Index", 
             };
 
-            // Package up all their cart items for the Stripe Receipt
             foreach (var item in cartItems)
             {
+                decimal priceWithVat = item.Product.Price * 1.15m;
+
                 options.LineItems.Add(new SessionLineItemOptions
                 {
                     PriceData = new SessionLineItemPriceDataOptions
                     {
-                        UnitAmount = (long)(item.Product.Price * 100), // Stripe reads ZAR in cents (R10.00 = 1000)
                         Currency = "zar",
+                        UnitAmount = (long)(priceWithVat * 100), 
                         ProductData = new SessionLineItemPriceDataProductDataOptions
                         {
                             Name = item.Product.ProductName,
@@ -65,11 +84,9 @@ namespace StoreManagementSystem.Controllers
                 });
             }
 
-            // Generate the Stripe Payment Screen
             var service = new SessionService();
             Session session = service.Create(options);
 
-            // Redirect the user out of our app and onto Stripe's secure servers!
             return Redirect(session.Url);
         }
 
@@ -100,19 +117,23 @@ namespace StoreManagementSystem.Controllers
                     await _context.SaveChangesAsync();
                 }
 
-                // 3. Create the Official Order with the Stripe Session ID
+                // 3. Calculate Database Total WITH 15% VAT to match Stripe perfectly
+                decimal subtotal = cartItems.Sum(c => c.Quantity * c.Product.Price);
+                decimal totalWithVat = subtotal * 1.15m;
+
+                // 4. Create the Official Order with the Stripe Session ID
                 var newOrder = new Order
                 {
                     CustomerId = customer.CustomerId,
                     OrderDate = DateTime.Now,
-                    TotalAmount = cartItems.Sum(c => c.Quantity * c.Product.Price), // Excludes VAT for simplicity right now
+                    TotalAmount = totalWithVat, // Saves the final VAT amount to the DB
                     OrderStatus = "Paid",
                     StripeSessionId = session.Id 
                 };
                 _context.Orders.Add(newOrder);
                 await _context.SaveChangesAsync();
 
-                // 4. Create Details & DEDUCT THE STOCK SAFELY
+                // 5. Create Details & DEDUCT THE STOCK SAFELY
                 foreach (var item in cartItems)
                 {
                     var orderDetail = new OrderDetail
@@ -120,7 +141,7 @@ namespace StoreManagementSystem.Controllers
                         OrderId = newOrder.OrderId,
                         ProductId = item.ProductId,
                         Quantity = item.Quantity,
-                        UnitPrice = item.Product.Price
+                        UnitPrice = item.Product.Price 
                     };
                     _context.OrderDetails.Add(orderDetail);
 
@@ -133,7 +154,7 @@ namespace StoreManagementSystem.Controllers
                     }
                 }
 
-                // 5. Empty their Cart
+                // 6. Empty their Cart
                 _context.CartItems.RemoveRange(cartItems);
                 await _context.SaveChangesAsync();
 

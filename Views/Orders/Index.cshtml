@@ -1,0 +1,72 @@
+@model IEnumerable<StoreManagementSystem.Models.Order>
+@{
+    ViewData["Title"] = "My Orders";
+}
+
+<div class="container my-5" style="min-height: 60vh;">
+    <div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-3">
+        <h2 class="fw-bold mb-0" style="color: #0f172a;">Order History</h2>
+        <span class="text-muted fw-semibold bg-light px-3 py-1 rounded-pill border">
+            @Model.Count() Total Orders
+        </span>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            @foreach (var order in Model)
+            {
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 transition-hover" style="background-color: #f8fafc; transition: transform 0.2s;">
+                        <div class="card-body p-4">
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="fw-bold text-muted small">ORDER #@order.OrderId</span>
+                                
+                                @if (order.OrderStatus == "Paid")
+                                {
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary rounded-pill px-3 py-1">Processing</span>
+                                }
+                                else if (order.OrderStatus == "Shipped")
+                                {
+                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-pill px-3 py-1">Shipped</span>
+                                }
+                                else if (order.OrderStatus == "Delivered")
+                                {
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3 py-1">Delivered</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary rounded-pill px-3 py-1">@order.OrderStatus</span>
+                                }
+                            </div>
+
+                            <h3 class="fw-bold text-dark mb-1">@order.TotalAmount.ToString("C")</h3>
+                            <p class="text-muted small mb-4"><i class="bi bi-calendar3 me-1"></i> Placed on @(order.OrderDate?.ToString("MMMM dd, yyyy"))</p>
+                            
+                            <a asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-dark w-100 fw-bold rounded-pill">
+                                Track & View Details <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-box2 text-muted mb-3 d-block" style="font-size: 5rem; opacity: 0.2;"></i>
+            <h4 class="fw-bold text-dark">No orders found</h4>
+            <p class="text-muted">You haven't placed any orders yet. Start shopping to fill this up!</p>
+            <a asp-controller="Shop" asp-action="Index" class="btn btn-primary rounded-pill px-4 mt-2 fw-bold">Browse Products</a>
+        </div>
+    }
+</div>
+
+<style>
+    .transition-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.08) !important;
+    }
+</style>
