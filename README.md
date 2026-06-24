@@ -31,7 +31,7 @@ It is divided into two primary environments: a sleek, customer-facing storefront
 ##  Getting Started
 
 ### Prerequisites
-* [.NET SDK](https://dotnet.microsoft.com/download) (Version X.X)
+* [.NET SDK](https://dotnet.microsoft.com/download) (Version 8)
 * An active [Stripe Developer](https://dashboard.stripe.com/) account for API keys.
 * Your preferred SQL Database server.
 
