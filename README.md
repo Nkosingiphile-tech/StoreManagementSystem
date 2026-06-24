@@ -1,7 +1,7 @@
 #  E-Commerce Management System
 
 ##  Overview
-[Project Name] is a comprehensive, full-stack e-commerce web application designed to handle everything from product browsing to secure checkout and backend inventory management. Built using C# and .NET, the platform emphasizes clean architecture, security, and a highly responsive user experience. 
+StoreManagementSystem is a comprehensive, full-stack e-commerce web application designed to handle everything from product browsing to secure checkout and backend inventory management. Built using C# and .NET, the platform emphasizes clean architecture, security, and a highly responsive user experience. 
 
 It is divided into two primary environments: a sleek, customer-facing storefront and a powerful, feature-rich administrative dashboard.
 
